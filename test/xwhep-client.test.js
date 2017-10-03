@@ -1,4 +1,4 @@
-const createXWHEPClient = require('../xwhep-client');
+const createXWHEPClient = require('../xwhep-js-client');
 
 console.log = () => {};
 

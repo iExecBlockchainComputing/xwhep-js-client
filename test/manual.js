@@ -1,10 +1,10 @@
-const createXWHEPClient = require('../xwhep-client');
+const createXWHEPClient = require('../xwhep-js-client');
 
 const xwhep = createXWHEPClient({
-  login: '',
-  password: '',
-  hostname: '',
-  port: '',
+  login: 'login',
+  password: 'password',
+  hostname: 'hostname',
+  port: '443',
 });
 
 xwhep.getApps().then(console.log);

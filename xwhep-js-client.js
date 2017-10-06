@@ -191,12 +191,12 @@ const createXWHEPClient = ({
         method: 'GET',
         rejectUnauthorized: false,
       };
-      console.log(`${options.hostname}:${options.port}${sendWorkPath}`);
+//      console.log(`${options.hostname}:${options.port}${sendWorkPath}`);
 
       const req = https.request(options, (res) => {
         res.on('data', (d) => {
           const strd = String.fromCharCode.apply(null, new Uint16Array(d));
-          console.log(strd);
+//          console.log(strd);
         });
 
         res.on('end', () => {
@@ -228,12 +228,12 @@ const createXWHEPClient = ({
         method: 'GET',
         rejectUnauthorized: false,
       };
-      console.log(`${options.hostname}:${options.port}${sendAppPath}`);
+//      console.log(`${options.hostname}:${options.port}${sendAppPath}`);
 
       const req = https.request(options, (res) => {
         res.on('data', (d) => {
           const strd = String.fromCharCode.apply(null, new Uint16Array(d));
-          console.log(strd);
+//          console.log(strd);
         });
 
         res.on('end', () => {
@@ -259,31 +259,37 @@ const createXWHEPClient = ({
    */
   function uploadData(dataUid, dataPath) {
     return new Promise((resolve, reject) => {
-      const uploadDataPath = `${PATH_UPLOADDATA}?XMLDESC=${xmlData}`;
+      const uploadDataPath = `${PATH_UPLOADDATA}/${dataUid}`;
       const options = {
-        hostname,
-        port,
-        path: `${PATH_UPLOADDATA + CREDENTIALS}&XMLDESC=${xmlData}`,
-        method: 'GET',
+        hostname : hostname,
+        port : port,
+        path : `${PATH_UPLOADDATA}/${dataUid}${CREDENTIALS}`,
+        method : 'POST',
+        protocol : 'https:',
         rejectUnauthorized: false,
+        multipart: { 'a':'b', 'c':'d'}
       };
-      console.log(`${options.hostname}:${options.port}${uploadDataPath}`);
+      console.log(`${options.hostname}:${options.port}${options.path}`);
 
       const stats = fs.statSync(dataPath);
-      // console.log('stats', stats);
       const dataSize = stats['size'];
 
       const dataMD5 = md5File.sync(dataPath);
+
+      console.log('uploadData DATAUID ', dataUid);
+      console.log('uploadData DATAMD5SUM ', dataMD5);
+      console.log('uploadData DATASIZE ', dataSize);
+      console.log('uploadData DATAFILE ', dataPath);
 
       const dataForm = new FormData();
       dataForm.append('DATAUID', dataUid);
       dataForm.append('DATAMD5SUM', dataMD5);
       dataForm.append('DATASIZE', dataSize);
       dataForm.append('DATAFILE', fs.createReadStream(dataPath));
-
-      dataForm.submit(options.path, (err, res) => {
-        // res – response object (http.IncomingMessage)  //
-        res.resume();
+      dataForm.submit(options, function(err, res) {
+    	if (err) {
+           reject('uploadData error ' + err);
+        }
       });
     });
   }
@@ -295,7 +301,7 @@ const createXWHEPClient = ({
    * @return a new Promise
    * @resolve undefined
    */
-  function sendData(xmlData) {
+ function sendData(xmlData) {
     return new Promise((resolve, reject) => {
       const sendDataPath = `${PATH_SENDDATA}?XMLDESC=${xmlData}`;
       const options = {
@@ -344,7 +350,7 @@ const createXWHEPClient = ({
         method: 'GET',
         rejectUnauthorized: false,
       };
-      console.log(`get() : ${options.hostname}:${options.port}${getPath}`);
+//      console.log(`get() : ${options.hostname}:${options.port}${getPath}`);
 
       const req = https.request(options, (res) => {
         res.on('data', (d) => {
@@ -353,7 +359,7 @@ const createXWHEPClient = ({
         });
 
         res.on('end', () => {
-          console.log(`get() : ${getResponse}`);
+//          console.log(`get() : ${getResponse}`);
           resolve(getResponse);
         });
       });
@@ -380,7 +386,7 @@ const createXWHEPClient = ({
           jsonObject = JSON.parse(JSON.stringify(result));
         });
 
-        console.log(JSON.stringify(jsonObject));
+//        console.log(JSON.stringify(jsonObject));
 
         if (jsonObject.xwhep.app === undefined) {
           return reject(`getApp() : Not an application : ${appUid}`);
@@ -393,7 +399,7 @@ const createXWHEPClient = ({
           hashtableAppNames[appName] = appUid;
         }
 
-        console.log(`hashtableAppNames[${appName}] = ${hashtableAppNames[appName]}`)
+//        console.log(`hashtableAppNames[${appName}] = ${hashtableAppNames[appName]}`)
 
         resolve(getResponse);
       }).catch((e) => {
@@ -420,18 +426,16 @@ const createXWHEPClient = ({
         method: 'GET',
         rejectUnauthorized: false,
       };
-      console.log('options', options);
+//      console.log('options', options);
       const req = https.request(options, (res) => {
         res.on('data', (d) => {
-          console.log('onData', d);
           const strd = String.fromCharCode.apply(null, new Uint16Array(d));
           getAppsResponse += strd;
         });
         res.on('end', () => {
-          console.log('onEnd');
-          console.log('getAppsResponse', getAppsResponse);
+//          console.log('getAppsResponse', getAppsResponse);
           parseString(getAppsResponse, (err, result) => {
-            console.log('result', result.xwhep.XMLVector);
+ //           console.log('result', result.xwhep.XMLVector);
             if ((result === null) || (result === '') || (result === undefined)) {
               return reject('getApps() : connection Error');
             }
@@ -441,17 +445,17 @@ const createXWHEPClient = ({
             }
             const appsCount = jsonData.xwhep.XMLVector[0].XMLVALUE.length;
             const appuids = [];
-            console.log(`appsCount ${appsCount}`);
+//            console.log(`appsCount ${appsCount}`);
             for (let i = 0; i < appsCount; i += 1) {
               const appuid = JSON.stringify(jsonData.xwhep.XMLVector[0].XMLVALUE[i].$.value).replace(/"/g, '');
               appuids[i] = appuid;
             }
             const apppUidPromises = appuids.map(getApp);
             Promise.all(apppUidPromises).then((xmlStr) => {
-              console.log(xmlStr);
+//              console.log(xmlStr);
               resolve(xmlStr);
             }).catch((e) => {
-              console.log('catch', e);
+              console.log('getApps error ', e);
               reject(`getApps() : ${e}`)
             });
           });
@@ -525,7 +529,6 @@ const createXWHEPClient = ({
       console.log(`work uid = ${workUid}`);
 
       const appUid = hashtableAppNames[appName];
-      console.log(`${appName} = ${appUid}`);
 
       const workDescription = `<work><uid>${workUid}</uid><accessrights>0x755</accessrights><appuid>${appUid}</appuid><status>UNAVAILABLE</status></work>`;
       sendWork(workDescription).then(() => {
@@ -554,7 +557,7 @@ const createXWHEPClient = ({
    */
   function setApplicationParam(uid, paramName, paramValue) {
     console.log('setApplicationParam uid', uid);
-    console.log('setApplicationParamp aramName', paramName);
+    console.log('setApplicationParam paramName', paramName);
     console.log('setApplicationParam paramValue', paramValue);
     if (!(paramName in appAvailableParameters)) {
       throw new Error(`setApplicationParam : invalid app parameter ${paramName}`);
@@ -579,10 +582,10 @@ const createXWHEPClient = ({
         sendApp(json2xml(jsonObject, false)).then(() => {
           resolve();
         }).catch((err) => {
-          reject(`setParam() error : ${err}`);
+          reject(`setApplicationParam() error : ${err}`);
         });
       }).catch((e) => {
-        reject(`setParam(): Work not found (${uid}) : ${e}`);
+        reject(`setApplicationParam(): Work not found (${uid}) : ${e}`);
       });
     });
   }
@@ -602,12 +605,14 @@ const createXWHEPClient = ({
    */
 
   function setParam(uid, paramName, paramValue) {
-    console.log("uid",uid);
-    console.log("paramName",paramName);
-    console.log("paramValue",paramValue);
+    console.log("setParam uid",uid);
+    console.log("setParam paramName",paramName);
+    console.log("setParam paramValue",paramValue);
+
     if (!(paramName in workAvailableParameters)) {
       throw new Error(`Invalid parameter ${paramName}`);
     }
+
     if (workAvailableParameters[paramName] === false) {
       throw new Error(`Read only parameter ${paramName}`);
     }
@@ -618,6 +623,7 @@ const createXWHEPClient = ({
         parseString(getResponse, (err, result) => {
           jsonObject = JSON.parse(JSON.stringify(result));
         });
+
 
         if (jsonObject.xwhep.work === undefined) {
           return reject(`setParam(): Not a work : ${uid}`);
@@ -652,14 +658,14 @@ const createXWHEPClient = ({
   function getParam(uid, paramName) {
     return new Promise((resolve, reject) => {
       get(uid).then((getResponse) => {
-        console.log(`getParam (${uid}, ${paramName}) = ${getResponse}`);
+//        console.log(`getParam (${uid}, ${paramName}) = ${getResponse}`);
 
         let jsonObject;
         parseString(getResponse, (err, result) => {
           jsonObject = JSON.parse(JSON.stringify(result));
         });
 
-        console.log(`getParam ${JSON.stringify(jsonObject)}`);
+//        console.log(`getParam ${JSON.stringify(jsonObject)}`);
 
         if (jsonObject.xwhep.work === undefined) {
           return reject(`getParam(): Not a work : ${uid}`);
@@ -669,7 +675,7 @@ const createXWHEPClient = ({
         if (paramValue === undefined) {
           return reject(`getParam() : Invalid work parameter : ${paramName}`);
         }
-        console.log(`getParam ${paramValue}`);
+//        console.log(`getParam ${paramValue}`);
 
         resolve(paramValue);
       }).catch((e) => {
@@ -722,7 +728,7 @@ const createXWHEPClient = ({
         }
 
         jsonObject.xwhep.work[0].status = 'PENDING';
-        console.log(`setPending() : ${JSON.stringify(jsonObject)}`);
+//        console.log(`setPending() : ${JSON.stringify(jsonObject)}`);
 
         sendWork(json2xml(jsonObject, false)).then(() => {
           resolve();
@@ -748,22 +754,29 @@ const createXWHEPClient = ({
   const submit = (user, provider, creator,appName, cmdLineParam, stdinContent) => (
     new Promise((resolve, reject) => {
       register(user, provider, creator,appName).then((uid) => {
+
         if ((stdinContent !== null) && (stdinContent !== undefined)) {
           const dataUid = uuidV4();
           console.log(`data uid = ${dataUid}`);
-          const dataDescription = `<data><uid>${dataUid}</uid><accessrights>0x755</accessrights><status>UNAVAILABLE</status></data>`;
+          const dataDescription = `<data><uid>${dataUid}</uid><accessrights>0x755</accessrights><name>stdin.txt</name><status>UNAVAILABLE</status></data>`;
           sendData(dataDescription).then(() => {
-            const dataFile = '/tmp/dataUid';
-            fs.writeFile(dataFile, stdinContent).then(() => {
+        	const dataFile = `/tmp/${dataUid}`;
+            fs.writeFile(dataFile, stdinContent, (err) => {
+              console.log("ixi");
+              if (err) {
+                reject(`submit() writeFile error : ${err}`);
+              }
               uploadData(dataUid, dataFile).then(() => {
                 const stdinuri = `xw://${SERVERNAME}:${SERVERPORT}/dataUid`;
-                setParam(uid, 'stdinuri', stdinuri).then(() => {
-                  fs.unlink(dataFile);
-                })
+            	setParam(uid, 'stdinuri', stdinuri).then(() => {
+            	}).catch((err) => {
+            	  reject(`submit() setParam error : ${err}`);
+            	});
               }).catch((err) => {
-                reject(`submit() sendData error : ${err}`);
+                reject(`submit() uploadData error : ${err}`);
               });
-            })
+//              fs.unlink(dataFile);
+            });
           }).catch((err) => {
             reject(`submit() sendData error : ${err}`);
           });
@@ -809,13 +822,13 @@ const createXWHEPClient = ({
 
       process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
-      console.log(`https://${options.hostname}:${options.port}${options.path}`);
+//      console.log(`https://${options.hostname}:${options.port}${options.path}`);
 
       const outputStream = fs.createWriteStream(downloadedPath);
       outputStream.on('error', (e) => {
         reject(`download() : pipe error ${e}`);
       }).on('data', (d) => {
-        console.log(d);
+//        console.log(d);
       }).on('finish', () => {
         resolve(downloadedPath);
       });
@@ -843,13 +856,13 @@ const createXWHEPClient = ({
     return new Promise((resolve, reject) => {
       process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
-      console.log(`${url}:${downloadedPath}`);
+//      console.log(`${url}:${downloadedPath}`);
 
       const outputStream = fs.createWriteStream(downloadedPath);
       outputStream.on('error', (e) => {
         reject(`download() : pipe error ${e}`);
       }).on('data', (d) => {
-        console.log(d);
+//        console.log(d);
       }).on('finish', () => {
         resolve(downloadedPath);
       });
@@ -858,7 +871,7 @@ const createXWHEPClient = ({
         .on('response', () => {
         })
         .on('error', (response) => {
-          console.error(`download() : request error ${response}`);
+          console.error(`downloadURL() : request error ${response}`);
           reject(`download() : request error ${response}`);
         })
         .pipe(outputStream);
@@ -999,7 +1012,7 @@ const createXWHEPClient = ({
         method: 'GET',
         rejectUnauthorized: false,
       };
-      console.log(`${options.hostname}:${options.port}${getPath}`);
+//      console.log(`${options.hostname}:${options.port}${getPath}`);
 
       const req = https.request(options, (res) => {
         res.on('data', (d) => {
@@ -1008,7 +1021,7 @@ const createXWHEPClient = ({
         });
 
         res.on('end', () => {
-          console.log(getResponse);
+//          console.log(getResponse);
           resolve();
         });
       });

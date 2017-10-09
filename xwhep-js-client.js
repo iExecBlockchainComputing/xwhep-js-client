@@ -266,12 +266,12 @@ const createXWHEPClient = ({
         path : `${PATH_UPLOADDATA}/${dataUid}${CREDENTIALS}`,
         method : 'POST',
         protocol : 'https:',
-        rejectUnauthorized: false,
-        multipart: { 'a':'b', 'c':'d'}
+        rejectUnauthorized: false
       };
       console.log(`${options.hostname}:${options.port}${options.path}`);
 
       const stats = fs.statSync(dataPath);
+      console.log(stats);
       const dataSize = stats['size'];
 
       const dataMD5 = md5File.sync(dataPath);
@@ -291,6 +291,7 @@ const createXWHEPClient = ({
            reject('uploadData error ' + err);
         }
       });
+      resolve();
     });
   }
 
@@ -305,18 +306,20 @@ const createXWHEPClient = ({
     return new Promise((resolve, reject) => {
       const sendDataPath = `${PATH_SENDDATA}?XMLDESC=${xmlData}`;
       const options = {
-        hostname,
-        port,
-        path: `${PATH_SENDDATA + CREDENTIALS}&XMLDESC=${xmlData}`,
+        hostname: hostname,
+        port: port,
+        path: `${PATH_SENDDATA}${CREDENTIALS}&XMLDESC=${xmlData}`,
         method: 'GET',
+        protocol : 'https:',
         rejectUnauthorized: false,
       };
       console.log(`${options.hostname}:${options.port}${sendDataPath}`);
 
       const req = https.request(options, (res) => {
-        res.on('data', (d) => {
+
+    	res.on('data', (d) => {
           const strd = String.fromCharCode.apply(null, new Uint16Array(d));
-          console.log(strd);
+    	  console.log(strd);
         });
 
         res.on('end', () => {
@@ -605,9 +608,6 @@ const createXWHEPClient = ({
    */
 
   function setParam(uid, paramName, paramValue) {
-    console.log("setParam uid",uid);
-    console.log("setParam paramName",paramName);
-    console.log("setParam paramValue",paramValue);
 
     if (!(paramName in workAvailableParameters)) {
       throw new Error(`Invalid parameter ${paramName}`);
@@ -624,6 +624,7 @@ const createXWHEPClient = ({
           jsonObject = JSON.parse(JSON.stringify(result));
         });
 
+        console.log("setParam(",uid,",",paramName,",", paramValue,") get = ", json2xml(jsonObject, false));
 
         if (jsonObject.xwhep.work === undefined) {
           return reject(`setParam(): Not a work : ${uid}`);
@@ -633,7 +634,7 @@ const createXWHEPClient = ({
         }
 
         jsonObject.xwhep.work[0][paramName] = paramValue;
-
+        console.log("setParam(",uid,",",paramName,",", paramValue,") send = ", json2xml(jsonObject, false));
         sendWork(json2xml(jsonObject, false)).then(() => {
           resolve();
         }).catch((err) => {
@@ -724,11 +725,12 @@ const createXWHEPClient = ({
         }
 
         if (jsonObject.xwhep.work[0].status.toString() !== 'UNAVAILABLE') {
-          return reject(`setPending(): Invalid status : ${jsonObject.xwhep.work[0].status}`);
+          return reject(`setPending(${uid}): Invalid status : ${jsonObject.xwhep.work[0].status}`);
         }
 
+        console.log(`setPending(${uid}) get : ${JSON.stringify(jsonObject)}`);
         jsonObject.xwhep.work[0].status = 'PENDING';
-//        console.log(`setPending() : ${JSON.stringify(jsonObject)}`);
+        console.log(`setPending(${uid}) send : ${JSON.stringify(jsonObject)}`);
 
         sendWork(json2xml(jsonObject, false)).then(() => {
           resolve();
@@ -740,6 +742,46 @@ const createXWHEPClient = ({
       });
     });
   }
+
+  
+  const setStdinUri= (workUid, stdinContent) => (
+	new Promise((resolve, reject) => {
+      if ((stdinContent !== "") && (stdinContent !== undefined)) {
+    	const dataUid = uuidV4();
+    	console.log(`data uid = ${dataUid}`);
+    	const dataDescription = `<data><uid>${dataUid}</uid><accessrights>0x755</accessrights><name>stdin.txt</name><status>UNAVAILABLE</status><links>3</links></data>`;
+    	sendData(dataDescription).then(() => {
+    	  const dataFile = `/tmp/${dataUid}`;
+          fs.writeFile(dataFile, stdinContent, (err) => {
+            if (err) {
+//              fs.unlink(dataFile);
+          	  reject(`setStdinUri() writeFile error : ${err}`);
+  	        }
+  	
+      	    uploadData(dataUid, dataFile).then(() => {
+              const stdinuri = `xw://${hostname}:${port}/${dataUid}`;
+          	  console.log(`setStdinUri() : ${stdinuri}`);
+
+          	  setParam(workUid, 'stdinuri', stdinuri).then(() => {
+          	    console.log(`${workUid}#stdinuri = ${stdinuri}`);
+//          	    fs.unlink(dataFile);
+          	  }).catch((err) => {
+//          		fs.unlink(dataFile);
+          		reject(`setStdinUri() setParam error : ${err}`);
+          	  });
+
+      	    }).catch((err) => {
+//      		  fs.unlink(dataFile);
+      		  reject(`setStdinUri() uploadData error : ${err}`);
+            });
+          });
+        }).catch((err) => {
+          console.log(`setStdinUri sendData error : ${err}`);
+        });
+      }
+      resolve();
+	})
+  )
 
   /**
    * This registers a new PENDING work for the provided application.
@@ -753,49 +795,103 @@ const createXWHEPClient = ({
    */
   const submit = (user, provider, creator,appName, cmdLineParam, stdinContent) => (
     new Promise((resolve, reject) => {
-      register(user, provider, creator,appName).then((uid) => {
-
-        if ((stdinContent !== null) && (stdinContent !== undefined)) {
-          const dataUid = uuidV4();
-          console.log(`data uid = ${dataUid}`);
-          const dataDescription = `<data><uid>${dataUid}</uid><accessrights>0x755</accessrights><name>stdin.txt</name><status>UNAVAILABLE</status></data>`;
-          sendData(dataDescription).then(() => {
-        	const dataFile = `/tmp/${dataUid}`;
-            fs.writeFile(dataFile, stdinContent, (err) => {
-              console.log("ixi");
-              if (err) {
-                reject(`submit() writeFile error : ${err}`);
-              }
-              uploadData(dataUid, dataFile).then(() => {
-                const stdinuri = `xw://${SERVERNAME}:${SERVERPORT}/dataUid`;
-            	setParam(uid, 'stdinuri', stdinuri).then(() => {
-            	}).catch((err) => {
-            	  reject(`submit() setParam error : ${err}`);
-            	});
-              }).catch((err) => {
-                reject(`submit() uploadData error : ${err}`);
-              });
-//              fs.unlink(dataFile);
+      register(user, provider, creator,appName).then((workUid) => {
+    	setStdinUri(workUid, stdinContent).then(() => {
+          setParam(workUid, 'cmdline', cmdLineParam).then(() => {
+            setPending(workUid).then(() => {
+              resolve(workUid);
+            }).catch((msg) => {
+              reject("submit() setPending error : ", msg);
             });
-          }).catch((err) => {
-            reject(`submit() sendData error : ${err}`);
-          });
-        }
-        setParam(uid, 'cmdline', cmdLineParam).then(() => {
-          setPending(uid).then(() => {
-            resolve(uid);
           }).catch((msg) => {
-            reject(msg);
+        	reject("submit() setParam error : ", msg);
           });
         }).catch((msg) => {
-          reject(msg);
+          reject("submit() setStdinUri error : ", msg);
         });
       }).catch((msg) => {
-        reject(msg);
+        reject("submit() register error : ", msg);
       });
     })
+  )
+
+  /**
+   * This registers a new PENDING work for the provided application.
+   * Since the status is set to PENDING, this new work candidate for scheduling.
+   * This is a public method implemented in the smart contract
+   * @param appName is the application name
+   * @param cmdLineParam is the command line parameter. This may be ""
+   * @return a new Promise
+   * @resolve the new work uid
+   * @exception is thrown if application is not found
+   */
+  const essai = (user, provider, creator,appName, cmdLineParam, stdinContent) => (
+		    new Promise((resolve, reject) => {
+
+		        if ((stdinContent !== null) && (stdinContent !== undefined)) {
+		          const dataUid = uuidV4();
+		          console.log(`data uid = ${dataUid}`);
+		          const dataDescription = `<data><uid>${dataUid}</uid><accessrights>0x755</accessrights><name>stdin.txt</name><status>UNAVAILABLE</status></data>`;
+		          sendData(dataDescription).then(() => {
+		        	const dataFile = `/tmp/${dataUid}`;
+		        	fs.writeFile(dataFile, stdinContent, (err) => {
+		        		if (err) {
+//		        			fs.unlink(dataFile);
+		        			reject(`submit() writeFile error : ${err}`);
+			            }
+			
+		        		uploadData(dataUid, dataFile).then(() => {
+		        			const stdinuri = `xw://${hostname}:${port}/${dataUid}`;
+		        			console.log(`stdin uri = ${stdinuri}`);
+
+		        		}).catch((err) => {
+//		        			fs.unlink(dataFile);
+		        			reject(`essai uploadData error : ${err}`);
+		        		});
+		            });
+		          }).catch((err) => {
+		        	  console.log(`sendData error : ${err}`);
+		          });
+		      }
+		    })
   );
 
+  const essai2 = (user, provider, creator,appName, cmdLineParam, stdinContent) => (
+		    new Promise((resolve, reject) => {
+
+		          const dataUid = uuidV4();
+		          console.log(`data uid = ${dataUid}`);
+		          const dataDescription = `<data><uid>${dataUid}</uid><accessrights>0x755</accessrights><name>stdin.txt</name><status>UNAVAILABLE</status></data>`;
+		          sendData(dataDescription).then(() => {
+		        	const dataFile = `/Users/mboleg/DGHEP/IEXEC/github/xwhep-js-client/88ff7d74-7154-4139-abfb-f32a586f5be9`;
+		        	uploadData(dataUid, dataFile).then(() => {
+	        			const stdinuri = `xw://${hostname}:${port}/${dataUid}`;
+		        		console.log(`stdin uri = ${stdinuri}`);
+		        	}).catch((err) => {
+		        		reject(`essai2 uploadData error : ${err}`);
+		        	});
+		          }).catch((err) => {
+		        	  console.log(`sendData error : ${err}`);
+		          });
+		    })
+  );
+    
+
+  const essai3 = (user, provider, creator,appName, cmdLineParam, stdinContent) => (
+		    new Promise((resolve, reject) => {
+
+		          const dataUid = "d38df5de-663a-4831-8aad-9b8afaed226c";
+		          console.log(`data uid = ${dataUid}`);
+		        	const dataFile = `/Users/mboleg/DGHEP/IEXEC/github/xwhep-js-client/88ff7d74-7154-4139-abfb-f32a586f5be9`;
+		        	uploadData(dataUid, dataFile).then(() => {
+	        			const stdinuri = `xw://${hostname}:${port}/${dataUid}`;
+		        		console.log(`stdin uri = ${stdinuri}`);
+		        	}).catch((err) => {
+		        		reject(`essai2 uploadData error : ${err}`);
+		        	});
+		    })
+  );
+    
   /**
    * This downloads a data
    * This is a private method not implemented in the smart contract
@@ -1188,6 +1284,9 @@ const createXWHEPClient = ({
   }
 
   return {
+	  essai,
+	  essai2,
+	  essai3,
     connectionError,
     sendWork,
     sendApp,

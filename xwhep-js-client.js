@@ -318,6 +318,7 @@ const createXWHEPClient = ({
       dataForm.submit(options, function(err, res) {
     	if (err) {
            reject('uploadData error ' + err);
+           return;
         }
       });
       resolve();
@@ -422,6 +423,7 @@ const createXWHEPClient = ({
 
         if (jsonObject.xwhep.app === undefined) {
           reject(`getApp() : Not an application : ${appUid}`);
+          return;
         }
 
         const appName = jsonObject.xwhep.app[0].name;
@@ -470,10 +472,12 @@ const createXWHEPClient = ({
  //           console.log('result', result.xwhep.XMLVector);
             if ((result === null) || (result === '') || (result === undefined)) {
               reject('getApps() : connection Error');
+              return;
             }
             const jsonData = JSON.parse(JSON.stringify(result));
             if (jsonData === null) {
               reject('getApps() : connection Error');
+              return;
             }
             const appsCount = jsonData.xwhep.XMLVector[0].XMLVALUE.length;
             const appuids = [];
@@ -600,6 +604,7 @@ const createXWHEPClient = ({
 
         if (jsonObject.xwhep.app === undefined) {
           reject(`setApplicationParam : Not an application : ${uid}`);
+          return;
         }
 
         jsonObject.xwhep.app[0][paramName] = paramValue;
@@ -648,10 +653,12 @@ const createXWHEPClient = ({
 
         if (jsonObject.xwhep.work === undefined) {
           reject(`setWorkParam(): Not a work : ${uid}`);
+          return;
         }
         if (jsonObject.xwhep.work[0].status.toString() !== 'UNAVAILABLE') {
           console.log("setWorkParam(",uid,",",paramName,",", paramValue,") invalid Status");
           reject(`setWorkParam(): Invalid status : ${jsonObject.xwhep.work[0].status}`);
+          return;
         }
 
         jsonObject.xwhep.work[0][paramName] = paramValue;
@@ -692,11 +699,13 @@ const createXWHEPClient = ({
 
         if (jsonObject.xwhep.work === undefined) {
           reject(`getWorkParam(): Not a work : ${uid}`);
+          return;
         }
 
         const paramValue = jsonObject.xwhep.work[0][paramName];
         if (paramValue === undefined) {
           reject(`getWorkParam() : Invalid work parameter : ${paramName}`);
+          return;
         }
 //        console.log(`getWorkParam ${paramValue}`);
 
@@ -744,10 +753,12 @@ const createXWHEPClient = ({
 
         if (jsonObject.xwhep.work === undefined) {
           reject(`setPending(): Not a work : ${uid}`);
+          return;
         }
 
         if (jsonObject.xwhep.work[0].status.toString() !== 'UNAVAILABLE') {
           reject(`setPending(${uid}): Invalid status : ${jsonObject.xwhep.work[0].status}`);
+          return;
         }
 
         jsonObject.xwhep.work[0].status = 'PENDING';
@@ -780,6 +791,7 @@ const createXWHEPClient = ({
         if (err) {
           fs.unlink(wFile);
           reject(`writeFile() writeFile error : ${err}`);
+          return;
   	    }
         resolve(wFile)
 	  })
@@ -798,6 +810,7 @@ const createXWHEPClient = ({
 	new Promise((resolve, reject) => {
       if ((stdinContent === "") || (stdinContent === undefined)) {
     	  resolve();
+    	  return;
       }
 
       console.log(`setStdinUri(${workUid})`);
@@ -813,6 +826,7 @@ const createXWHEPClient = ({
               });
               if (jsonObject.xwhep.data === undefined) {
                 reject(`setStdinUri() : can't retrieve data: ${dataUid}`);
+                return;
               }
               const stdinUri = jsonObject.xwhep.data[0]['uri'];
               console.log(`setStdinUri(${workUid}) : ${stdinUri}`);
@@ -911,6 +925,7 @@ const createXWHEPClient = ({
 //        console.log(d);
       }).on('finish', () => {
         resolve(downloadedPath);
+        return;
       });
 
       request.get(`https://${options.hostname}:${options.port}${options.path}`)
@@ -945,6 +960,7 @@ const createXWHEPClient = ({
 //        console.log(d);
       }).on('finish', () => {
         resolve(downloadedPath);
+        return;
       });
 
       request.get(url)
@@ -976,14 +992,17 @@ const createXWHEPClient = ({
         });
         if (jsonObject.xwhep.work === undefined) {
           reject(`getResult(): Not a work : ${uid}`);
+          return;
         }
 
         if (jsonObject.xwhep.work[0].status.toString() !== 'COMPLETED') {
           reject(`getRestult(): Invalid status : ${jsonObject.xwhep.work[0].status}`);
+          return;
         }
 
         if (jsonObject.xwhep.work[0].resulturi === undefined) {
           resolve(undefined);
+          return;
         }
         const uri = jsonObject.xwhep.work[0].resulturi.toString();
         const resultUid = uri.substring(uri.lastIndexOf('/') + 1);
@@ -1013,10 +1032,12 @@ const createXWHEPClient = ({
         });
         if (jsonObject.xwhep.data === undefined) {
           reject(`downloadResult(): Not a data : ${uid}`);
+          return;
         }
 
         if (jsonObject.xwhep.data[0].status.toString() !== 'AVAILABLE') {
           reject(`downloadResult(): Invalid status : ${jsonObject.xwhep.data[0].status}`);
+          return;
         }
 
         let resultPath = `result.${uid}`;
@@ -1033,6 +1054,7 @@ const createXWHEPClient = ({
         const dataUri = jsonObject.xwhep.data[0].uri;
         if (dataUri === undefined) {
           reject(`downloadResult(): data uri not found : ${uid}`);
+          return;
         }
         console.log(`downloadResult() calling download(${dataUri}, ${resultPath})`);
         download(dataUri.toString(), resultPath).then((downloadedPath) => {
@@ -1060,11 +1082,13 @@ const createXWHEPClient = ({
       fs.readdir('.', (ferr, files) => { // '/' denotes the root folder
         if (ferr) {
           reject(ferr);
+          return;
         }
 
         files.forEach((file) => {
           if (file.indexOf(uid) !== -1) {
             resolve(file);
+            return;
           }
         });
         reject(`getResultPath() : file not found ${uid}`);
@@ -1103,6 +1127,7 @@ const createXWHEPClient = ({
         res.on('end', () => {
 //          console.log(getResponse);
           resolve();
+          return;
         });
       });
 
@@ -1131,6 +1156,7 @@ const createXWHEPClient = ({
           if (newStatus.toString() === 'ERROR') {
             clearInterval(theInterval);
             reject(`waitCompleted() : work ERROR (${uid})`);
+            return;
           }
           if (newStatus.toString() === 'COMPLETED') {
             console.log("waitCompleted !");

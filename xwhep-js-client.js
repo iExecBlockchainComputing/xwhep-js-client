@@ -7,6 +7,7 @@ const request = require('request');
 const json2xml = require('json2xml');
 const FormData = require('form-data');
 const md5File = require('md5-file');
+const unzip= require('unzip');
 
 /*
  * This is the delay between between two get status calls
@@ -761,7 +762,7 @@ const createXWHEPClient = ({
    * @exception is thrown if application is not found
    * @see #setPending(uid)
    */
-  async function register(user, provider, creator, appName) {
+  async function register(user, provider, creator, appName, submitTxHash) {
 
     if (!(appName in hashtableAppNames)) {
       await getApps().then(() => {
@@ -776,7 +777,7 @@ const createXWHEPClient = ({
 
       const appUid = hashtableAppNames[appName];
 
-      const workDescription = `<work><uid>${workUid}</uid><accessrights>0x755</accessrights><appuid>${appUid}</appuid><sgid></sgid><status>UNAVAILABLE</status></work>`;
+      const workDescription = `<work><uid>${workUid}</uid><accessrights>0x755</accessrights><appuid>${appUid}</appuid><sgid>${submitTxHash}</sgid><status>UNAVAILABLE</status></work>`;
       sendWork(workDescription).then(() => {
         sendWork(workDescription).then(() => { // a 2nd time to force status to UNAVAILABLE
           resolve(workUid);
@@ -1102,10 +1103,10 @@ const createXWHEPClient = ({
    * @resolve the new work uid
    * @exception is thrown if application is not found
    */
-  const submit = (user, provider, creator,appName, cmdLineParam, stdinContent) => (
+  const submit = (user, provider, creator,appName, cmdLineParam, stdinContent,submitTxHash) => (
     new Promise((resolve, reject) => {
       console.log(`submit(${appName})`);
-      register(user, provider, creator,appName).then((workUid) => {
+      register(user, provider, creator,appName,submitTxHash).then((workUid) => {
         setWorkParam(workUid, 'cmdline', cmdLineParam).then(() => {
           setStdinUri(workUid, stdinContent).then(() => {
             setPending(workUid).then(() => {
@@ -1436,10 +1437,10 @@ const createXWHEPClient = ({
    * @exception is thrown on submission error
    * @exception is thrown if work status is ERROR
    */
-  function submitAndWait(user, provider, creator, appName, cmdLineParam) {
+  function submitAndWait(user, provider, creator, appName, cmdLineParam,stdinContent,submitTxHash) {
     return new Promise((resolve, reject) => {
       let workuid;
-      submit(user, provider, creator, appName, cmdLineParam).then((uid) => {
+      submit(user, provider, creator, appName, cmdLineParam,stdinContent,submitTxHash).then((uid) => {
         workuid = uid;
         console.log('submitAndWait() submission done');
         waitCompleted(uid).then(() => {
@@ -1480,27 +1481,29 @@ const createXWHEPClient = ({
    * @exception is thrown on submission error
    * @exception is thrown if work status is ERROR
    */
-  function submitAndWaitAndGetStdout(user, provider, creator, appName, cmdLineParam) {
+  function submitAndWaitAndGetStdout(user, provider, creator, appName, cmdLineParam,stdinContent,submitTxHash) {
     return new Promise((resolve, reject) => {
       let workuid;
       let resultPath;
-      submitAndWait(user, provider, creator, appName, cmdLineParam).then((results) => {
+      submitAndWait(user, provider, creator, appName, cmdLineParam,stdinContent,submitTxHash).then((results) => {
         [workuid, resultPath] = results;
         console.log('submitAndWaitAndGetResult() submitAndWait done');
         console.log(`submitAndWaitAndGetResult() path ${resultPath}`);
-        dumpFile(resultPath).then((textContent) => {
-          resolve([workuid,textContent]);
-          return;
-        }).catch((msg) => {
-          reject(`submitAndWaitAndGetResult() : ${msg}`);
-          return;
-        });
+
+          dumpFile(resultPath).then((textContent) => {
+            resolve([workuid,textContent]);
+            return;
+          }).catch((msg) => {
+            reject(`submitAndWaitAndGetResult() : ${msg}`);
+            return;
+          });
       }).catch((e) => {
         reject(`submitAndWaitAndGetResult() : ${e}`);
   	    return;
       });
     });
   }
+
 
   /**
    * This dumps a text file

@@ -2,6 +2,7 @@ const https = require('https');
 const { parseString } = require('xml2js');
 const fs = require('fs');
 const uuidV4 = require('uuid/v4');
+const { URL } = require('url');
 const request = require('request');
 const json2xml = require('json2xml');
 const FormData = require('form-data');
@@ -171,7 +172,90 @@ const dataAvailableParameters = {
   package: true,
   replicated: false,
 };
+/**
+ * This contains known CPU names
+ * Key is the cpu name
+ * Value is true
+ */
+const knownCPUs = {
+  IX86: true,
+  X86_64: true,
+  IA64: true,
+  PPC: true,
+  SPARC: true,
+  ALPHA: true,
+  AMD64: true,
+  ARM: true,
+}
+/**
+ * This contains known Operating System (OS) names
+ * Key is the OS name
+ */
+const knownOSes = {
+  LINUX: true,
+  WIN32: true,
+  MACOSX: true,
+  SOLARIS: true,
+  JAVA: true,
+}
 
+function getApplicationBinaryFieldName(_os, _cpu) {
+
+  if ((_os === undefined) || (_cpu === undefined)) {
+	throw new Error('OS or CPU undefined');
+  }
+
+  os = _os.toUpperCase();
+  cpu = _cpu.toUpperCase();
+
+  if (os === "JAVA") {
+	return "javauri";
+  }
+
+  switch (os) {
+  case "LINUX":
+	switch (cpu) {
+	case "IX86":
+	  return "linux_ix86uri";
+	case "PPC":
+	  return "linux_ppcuri";
+	case "AMD64":
+	  return "linux_amd64uri";
+	case "X86_64":
+	  return "linux_x86_64uri";
+	case "IA64":
+	  return "linux_ia64uri";
+	default:
+	  break;
+	}
+	break;
+  case "WIN32":
+    switch (cpu) {
+    case "IX86":
+      return "win32_ix86uri";
+    case "AMD64":
+      return "win32_amd64uri";
+    case "X86_64":
+      return "win32_x86_64uri";
+    default:
+      break;
+    }
+    break;
+  case "MACOSX":
+	switch (cpu) {
+	case "IX86":
+	  return "macos_ix86uri";
+	case "X86_64":
+	  return "macos_x86_64uri";
+	case "PPC":
+	  return "macos_ppcuri";
+	default:
+	  break;
+	}
+	break;
+  }
+  return undefined;
+}
 
 const createXWHEPClient = ({
   login, password, hostname, port,
@@ -224,8 +308,6 @@ const createXWHEPClient = ({
 
       const req = https.request(options, (res) => {
         res.on('data', (d) => {
-          const strd = String.fromCharCode.apply(null, new Uint16Array(d));
-//          console.log(strd);
         });
 
         res.on('end', () => {
@@ -249,7 +331,6 @@ const createXWHEPClient = ({
    */
   function sendApp(xmlApp) {
     return new Promise((resolve, reject) => {
-      const sendAppPath = `${PATH_SENDAPP}?XMLDESC=${xmlApp}`;
       const options = {
         hostname,
         port,
@@ -257,12 +338,10 @@ const createXWHEPClient = ({
         method: 'GET',
         rejectUnauthorized: false,
       };
-//      console.log(`${options.hostname}:${options.port}${sendAppPath}`);
+      console.log(`${options.hostname}:${options.port}${options.path}`);
 
       const req = https.request(options, (res) => {
         res.on('data', (d) => {
-          const strd = String.fromCharCode.apply(null, new Uint16Array(d));
-//          console.log(strd);
         });
 
         res.on('end', () => {
@@ -271,7 +350,7 @@ const createXWHEPClient = ({
       });
 
       req.on('error', (e) => {
-        reject(e);
+    	  reject(e);
       });
       req.end();
     });
@@ -347,8 +426,6 @@ const createXWHEPClient = ({
       const req = https.request(options, (res) => {
 
     	res.on('data', (d) => {
-//          const strd = String.fromCharCode.apply(null, new Uint16Array(d));
-//    	  console.log(strd);
         });
 
         res.on('end', () => {
@@ -503,29 +580,142 @@ const createXWHEPClient = ({
   }
 
   /**
-   * This registers a new application
+   * This registers a new deployable application
    * This is a public method implemented in the smart contract
    * It is the caller responsibility to ensure appName does not already exist
-   * @param appName is the application name; this must be unic
+   * @param appName is the application name;  
+   *        application name is set as "appName_creator" and this is unic
+   *        If one given creator calls this method twice or more, 
+   *        this does not insert a new application, but updates application 
+   *        which name is "appName_creator"
+   * @param os  is the binary operating system; must be in knownOSes
+   * @param cpu is the binary CPU type; must be in knownCPUs
+   * @param binaryUrl is the URI where to find the binary; 
+   *        binary is uploaded to XWHEP server, if its a "file://"
    * @return a new Promise
    * @resolve the new app uid
    * @exception is thrown if application is not found
-   * @see #setPending(uid)
+   * @see knownCPUs
+   * @see knownOSes
    */
-  async function registerApp(user, provider, creator, appName) {
-    console.log(`registerApp ; ${appName}`);
+  function registerApp(user, provider, creator, appName, _os, _cpu, binaryUrl) {
+	if ((_os === undefined) || (_cpu === undefined) || (binaryUrl === undefined)) {
+      return Promise.reject(new Error('registerApp() : OS or CPU undefined'));
+	}
+
+	os = _os.toUpperCase();
+	cpu = _cpu.toUpperCase();
+
+    if (!(cpu in knownCPUs)) {
+      return Promise.reject(new Error(`registerApp() : unknown CPU "${cpu}"`));
+    }
+    if (!(os in knownOSes)) {
+      return Promise.reject(new Error(`registerApp() : unknown OS "${os}"`));
+    }
+
+    console.log(`registerApp (${appName}, ${os}, ${cpu}, ${binaryUrl})`);
 
     return new Promise((resolve, reject) => {
       const appUid = uuidV4();
       console.log(`registerApp appUid = ${appUid}`);
 
-      const appDescription = `<app><uid>${appUid}</uid><name>${appName}</name><accessrights>0x755</accessrights><status>AVAILABLE</status></app>`;
+      const appDescription = `<app><uid>${appUid}</uid><name>${appName}</name><type>DEPLOYABLE</type><accessrights>0x755</accessrights></app>`;
       sendApp(appDescription).then(() => {
-        resolve(appUid);
+    	setApplicationBinary(appUid, os, cpu, binaryUrl).then(() => {
+    	  resolve(appUid);
+    	}).catch((err) => {
+    	  reject(`registerApp() setApplicationBinary error : ${err}`);
+    	});
       }).catch((err) => {
         reject(`registerApp() sendApp error : ${err}`);
       });
     });
+  }
+  /**
+   * This registers a new data as stdin for the provided work
+   * This is a private method not implemented in the smart contract
+   * @param workUid is the work identifier
+   * @param stdinContent is a string containing the stdin
+   * @return a new Promise
+   * @resolve undefined
+   * @exception is thrown on error
+   */
+  function setApplicationBinary(appUid, _os, _cpu, binaryUrl) {
+
+	return new Promise((resolve, reject) => {
+      if ((_os === undefined) || (_cpu === undefined) || (binaryUrl === undefined)) {
+        reject(new Error(`setApplicationBinary() : OS or CPU undefined`));
+      }
+
+      os = _os.toUpperCase();
+      cpu = _cpu.toUpperCase();
+
+      if (!(cpu in knownCPUs)) {
+        reject(new Error(`setApplicationBinary() : unknown CPU "${cpu}"`));
+      }
+      if (!(os in knownOSes)) {
+        reject(new Error(`setApplicationBinary() : unknown OS "${os}"`));
+      }
+
+      let binaryURI;
+      binaryURI = new URL(binaryUrl);
+
+      console.log(`setApplicationBinary (${appUid}, ${os}, ${cpu}, ${binaryURI}) : ${binaryURI.protocol}`);
+      console.log(`setApplicationBinary binaryURI.protocol : ${binaryURI.protocol}`);
+
+	  if(binaryURI.protocol == "file:") {
+        const dataUid = uuidV4();
+        const dataDescription = `<data><uid>${dataUid}</uid><accessrights>0x755</accessrights><type>BINARY</type><name>fileName</name><cpu>${cpu}</cpu><os>${os}</os><status>UNAVAILABLE</status></data>`;
+
+        sendData(dataDescription).then(() => {
+
+          const dataFile = binaryURI.pathname; 
+    	  console.log(`setApplicationBinary() dataFile ${dataFile}`);
+
+    	  uploadData(dataUid, dataFile).then(() => {
+    		get(dataUid).then((getResponse) => {
+    		  let jsonObject;
+    		  parseString(getResponse, (err, result) => {
+    			jsonObject = JSON.parse(JSON.stringify(result));
+    		  });
+
+    		  if (jsonObject.xwhep.data === undefined) {
+    			reject(`setApplicationBinary() : can't retrieve data: ${dataUid}`);
+              }
+
+    		  binaryURI = new URL(jsonObject.xwhep.data[0]['uri']);
+
+    		  const appBinaryFieldName = getApplicationBinaryFieldName(os,cpu);
+     		  console.log(`setApplicationBinary  setApplicationParam(${appUid}, ${appBinaryFieldName}, ${binaryURI.href})`);
+
+     		  setApplicationParam(appUid, appBinaryFieldName, binaryURI.href).then(() => {
+     			console.log(`setApplicationBinary(${appUid}) ${appUid}#${appBinaryFieldName} = ${binaryURI}`);
+     			resolve();
+     	      }).catch((err) => {
+     	    	reject(`setApplicationBinary() setApplicationParam error : ${err}`);
+     	      });
+      	    }).catch((err) => {
+      	     reject(`setApplicationBinary() get data error : ${err}`);
+      	    });
+      	  }).catch((err) => {
+      		reject(`setApplicationBinary() uploadData error : ${err}`);
+      	  });
+        }).catch((err) => {
+          reject(`setApplicationBinary() sendData error : ${err}`);
+        });
+
+	  } else {
+
+        const appBinaryFieldName = getApplicationBinaryFieldName(os,cpu);
+        console.log(`setApplicationBinary  setApplicationParam(${appUid}, ${appBinaryFieldName}, ${binaryURI.href})`);
+        setApplicationParam(appUid, appBinaryFieldName, binaryURI.href).then(() => {
+		  console.log(`setApplicationBinary(${appUid}) ${appUid}#${appBinaryFieldName} = ${binaryURI}`);
+		  resolve();
+        }).catch((err) => {
+          reject(`setApplicationBinary() setApplicationParam error : ${err}`);
+        });
+	  }
+    })
   }
 
   /**
@@ -545,7 +735,7 @@ const createXWHEPClient = ({
     if (!(appName in hashtableAppNames)) {
       await getApps().then(() => {
         if (!(appName in hashtableAppNames)) {
-          return Promise.reject(new Error(`Application not found ${appName}`));
+          return Promise.reject(new Error(`register() : application not found ${appName}`));
         }
       });
     }
@@ -581,14 +771,16 @@ const createXWHEPClient = ({
    * @exception is thrown if parameter is read only (e.g. status, return code, etc.)
    */
   function setApplicationParam(uid, paramName, paramValue) {
-    console.log('setApplicationParam uid', uid);
+
+	console.log('setApplicationParam uid', uid);
     console.log('setApplicationParam paramName', paramName);
     console.log('setApplicationParam paramValue', paramValue);
+
     if (!(paramName in appAvailableParameters)) {
-      throw new Error(`setApplicationParam : invalid app parameter ${paramName}`);
+        return Promise.reject(new Error(`setApplicationParam() : invalid app parameter ${paramName}`));
     }
     if (appAvailableParameters[paramName] === false) {
-      throw new Error(`setApplicationParam : read only app parameter ${paramName}`);
+        return Promise.reject(new Error(`setApplicationParam() : read only app parameter ${paramName}`));
     }
 
     return new Promise((resolve, reject) => {
@@ -632,11 +824,11 @@ const createXWHEPClient = ({
   function setWorkParam(uid, paramName, paramValue) {
 
     if (!(paramName in workAvailableParameters)) {
-      throw new Error(`Invalid parameter ${paramName}`);
+      return Promise.reject(new Error(`setWorkParam() : Invalid parameter ${paramName}`));
     }
 
     if (workAvailableParameters[paramName] === false) {
-      throw new Error(`Read only parameter ${paramName}`);
+      return Promise.reject(new Error(`setWorkParam() : read only parameter ${paramName}`));
     }
 
     return new Promise((resolve, reject) => {
@@ -802,7 +994,7 @@ const createXWHEPClient = ({
 
       console.log(`setStdinUri(${workUid})`);
       const dataUid = uuidV4();
-      const dataDescription = `<data><uid>${dataUid}</uid><accessrights>0x755</accessrights><name>stdin.txt</name><status>UNAVAILABLE</status><links>100</links></data>`;
+      const dataDescription = `<data><uid>${dataUid}</uid><accessrights>0x755</accessrights><name>stdin.txt</name><status>UNAVAILABLE</status></data>`;
       sendData(dataDescription).then(() => {
     	writeFile(dataUid, stdinContent).then((dataFile) =>{  	
       	  uploadData(dataUid, dataFile).then(() => {
@@ -855,17 +1047,17 @@ const createXWHEPClient = ({
    */
   const submit = (user, provider, creator,appName, cmdLineParam, stdinContent) => (
     new Promise((resolve, reject) => {
-    	console.log(`submit(${appName})`);
-    	register(user, provider, creator,appName).then((workUid) => {
+      console.log(`submit(${appName})`);
+      register(user, provider, creator,appName).then((workUid) => {
         setWorkParam(workUid, 'cmdline', cmdLineParam).then(() => {
           setStdinUri(workUid, stdinContent).then(() => {
             setPending(workUid).then(() => {
-                resolve(workUid);
+              resolve(workUid);
             }).catch((msg) => {
               reject("submit() setPending error : ", msg);
             });
           }).catch((msg) => {
-        	reject("submit() setWorkParam error : ", msg);
+            reject("submit() setWorkParam error : ", msg);
           });
         }).catch((msg) => {
           reject("submit() setStdinUri error : ", msg);

@@ -312,11 +312,13 @@ const createXWHEPClient = ({
 
         res.on('end', () => {
           resolve();
+          return;
         });
       });
 
       req.on('error', (e) => {
         reject(e);
+        return;
       });
       req.end();
     });
@@ -346,11 +348,13 @@ const createXWHEPClient = ({
 
         res.on('end', () => {
           resolve();
+          return;
         });
       });
 
       req.on('error', (e) => {
     	  reject(e);
+    	  return;
       });
       req.end();
     });
@@ -401,6 +405,7 @@ const createXWHEPClient = ({
         }
       });
       resolve();
+      return;
     });
   }
 
@@ -431,11 +436,13 @@ const createXWHEPClient = ({
 
         res.on('end', () => {
           resolve();
+          return;
         });
       });
 
       req.on('error', (e) => {
         reject(e);
+        return;
       });
       req.end();
     });
@@ -460,7 +467,6 @@ const createXWHEPClient = ({
         method: 'GET',
         rejectUnauthorized: false,
       };
-//      console.log(`get() : ${options.hostname}:${options.port}${getPath}`);
 
       const req = https.request(options, (res) => {
         res.on('data', (d) => {
@@ -469,13 +475,14 @@ const createXWHEPClient = ({
         });
 
         res.on('end', () => {
-//          console.log(`get() : ${getResponse}`);
           resolve(getResponse);
+          return;
         });
       });
 
       req.on('error', (e) => {
         reject(e);
+        return;
       });
       req.end();
     })
@@ -496,25 +503,22 @@ const createXWHEPClient = ({
           jsonObject = JSON.parse(JSON.stringify(result));
         });
 
-//        console.log(JSON.stringify(jsonObject));
-
         if (jsonObject.xwhep.app === undefined) {
           reject(`getApp() : Not an application : ${appUid}`);
           return;
         }
 
         const appName = jsonObject.xwhep.app[0].name;
-//        console.log(`${appUid} ; ${appName}`);
 
         if (!(appName in hashtableAppNames)) {
           hashtableAppNames[appName] = appUid;
         }
 
-//        console.log(`hashtableAppNames[${appName}] = ${hashtableAppNames[appName]}`)
-
         resolve(getResponse);
+  	    return;
       }).catch((e) => {
         reject(`getApp() : Application not found (${appUid}) : ${e}`);
+        return;
       });
     });
   }
@@ -544,9 +548,7 @@ const createXWHEPClient = ({
           getAppsResponse += strd;
         });
         res.on('end', () => {
-//          console.log('getAppsResponse', getAppsResponse);
           parseString(getAppsResponse, (err, result) => {
- //           console.log('result', result.xwhep.XMLVector);
             if ((result === null) || (result === '') || (result === undefined)) {
               reject('getApps() : connection Error');
               return;
@@ -558,18 +560,18 @@ const createXWHEPClient = ({
             }
             const appsCount = jsonData.xwhep.XMLVector[0].XMLVALUE.length;
             const appuids = [];
-//            console.log(`appsCount ${appsCount}`);
             for (let i = 0; i < appsCount; i += 1) {
               const appuid = JSON.stringify(jsonData.xwhep.XMLVector[0].XMLVALUE[i].$.value).replace(/"/g, '');
               appuids[i] = appuid;
             }
             const apppUidPromises = appuids.map(getApp);
             Promise.all(apppUidPromises).then((xmlStr) => {
-//              console.log(xmlStr);
               resolve(xmlStr);
+              return;
             }).catch((e) => {
               console.log('getApps error ', e);
               reject(`getApps() : ${e}`)
+        	  return;
             });
           });
         });
@@ -578,6 +580,7 @@ const createXWHEPClient = ({
       req.on('error', (e) => {
         console.log('onError', e);
         reject(`getApps() : ${e}`);
+        return;
       });
       req.end();
     });
@@ -603,23 +606,26 @@ const createXWHEPClient = ({
    * @see knownOSes
    */
   function registerApp(user, provider, creator, appName, _os, _cpu, binaryUrl) {
-	if ((_os === undefined) || (_cpu === undefined) || (binaryUrl === undefined)) {
-      return Promise.reject(new Error('registerApp() : OS or CPU undefined'));
-	}
+	return new Promise((resolve, reject) => {
+	  if ((_os === undefined) || (_cpu === undefined) || (binaryUrl === undefined)) {
+        reject('registerApp() : OS or CPU undefined');
+        return;
+	  }
 
-	os = _os.toUpperCase();
-	cpu = _cpu.toUpperCase();
+	  os = _os.toUpperCase();
+	  cpu = _cpu.toUpperCase();
 
-    if (!(cpu in knownCPUs)) {
-      return Promise.reject(new Error(`registerApp() : unknown CPU "${cpu}"`));
-    }
-    if (!(os in knownOSes)) {
-      return Promise.reject(new Error(`registerApp() : unknown OS "${os}"`));
-    }
+	  if (!(cpu in knownCPUs)) {
+        reject(`registerApp() : unknown CPU "${cpu}"`);
+        return;
+	  }
+	  if (!(os in knownOSes)) {
+        reject(`registerApp() : unknown OS "${os}"`);
+        return;
+	  }
 
-    console.log(`registerApp (${appName}, ${os}, ${cpu}, ${binaryUrl})`);
+	  console.log(`registerApp (${appName}, ${os}, ${cpu}, ${binaryUrl})`);
 
-    return new Promise((resolve, reject) => {
       const appUid = uuidV4();
       console.log(`registerApp appUid = ${appUid}`);
 
@@ -627,11 +633,14 @@ const createXWHEPClient = ({
       sendApp(appDescription).then(() => {
     	setApplicationBinary(appUid, os, cpu, binaryUrl).then(() => {
     	  resolve(appUid);
+    	  return;
     	}).catch((err) => {
     	  reject(`registerApp() setApplicationBinary error : ${err}`);
+    	  return;
     	});
       }).catch((err) => {
         reject(`registerApp() sendApp error : ${err}`);
+        return;
       });
     });
   }
@@ -649,6 +658,7 @@ const createXWHEPClient = ({
 	return new Promise((resolve, reject) => {
       if ((_os === undefined) || (_cpu === undefined) || (binaryUrl === undefined)) {
         reject(`setApplicationBinary() : OS or CPU undefined`);
+        return;
       }
 
       os = _os.toUpperCase();
@@ -656,9 +666,11 @@ const createXWHEPClient = ({
 
       if (!(cpu in knownCPUs)) {
         reject(`setApplicationBinary() : unknown CPU "${cpu}"`);
+        return;
       }
       if (!(os in knownOSes)) {
         reject(`setApplicationBinary() : unknown OS "${os}"`);
+        return;
       }
 
       let binaryURI;
@@ -674,6 +686,7 @@ const createXWHEPClient = ({
 		console.log(`setApplicationBinary ${dataSize}`);
 		if(dataSize < 55) {
 			reject(`setApplicationBinary() : binaryfile.size < 55 ???`);
+			return;
 		}
         const dataUid = uuidV4();
         const dataDescription = `<data><uid>${dataUid}</uid><accessrights>0x755</accessrights><type>BINARY</type><name>fileName</name><cpu>${cpu}</cpu><os>${os}</os><status>UNAVAILABLE</status></data>`;
@@ -691,6 +704,7 @@ const createXWHEPClient = ({
 
     		  if (jsonObject.xwhep.data === undefined) {
     			reject(`setApplicationBinary() : can't retrieve data: ${dataUid}`);
+    			return;
               }
 
     		  binaryURI = new URL(jsonObject.xwhep.data[0]['uri']);
@@ -701,17 +715,22 @@ const createXWHEPClient = ({
      		  setApplicationParam(appUid, appBinaryFieldName, binaryURI.href).then(() => {
      			console.log(`setApplicationBinary(${appUid}) ${appUid}#${appBinaryFieldName} = ${binaryURI}`);
      			resolve();
+     			return;
      	      }).catch((err) => {
      	    	reject(`setApplicationBinary() setApplicationParam error : ${err}`);
+     	    	return;
      	      });
       	    }).catch((err) => {
       	     reject(`setApplicationBinary() get data error : ${err}`);
+      	     return;
       	    });
       	  }).catch((err) => {
       		reject(`setApplicationBinary() uploadData error : ${err}`);
+ 	    	return;
       	  });
         }).catch((err) => {
           reject(`setApplicationBinary() sendData error : ${err}`);
+          return;
         });
 
 	  } else {
@@ -721,8 +740,10 @@ const createXWHEPClient = ({
         setApplicationParam(appUid, appBinaryFieldName, binaryURI.href).then(() => {
 		  console.log(`setApplicationBinary(${appUid}) ${appUid}#${appBinaryFieldName} = ${binaryURI}`);
 		  resolve();
+          return;
         }).catch((err) => {
           reject(`setApplicationBinary() setApplicationParam error : ${err}`);
+          return;
         });
 	  }
     })
@@ -759,11 +780,14 @@ const createXWHEPClient = ({
       sendWork(workDescription).then(() => {
         sendWork(workDescription).then(() => { // a 2nd time to force status to UNAVAILABLE
           resolve(workUid);
+          return;
         }).catch((err) => {
           reject(`register() sendWork 2 error : ${err}`);
+          return;
         });
       }).catch((err) => {
         reject(`register() sendWork 1 error : ${err}`);
+        return;
       });
     })
   }
@@ -809,11 +833,14 @@ const createXWHEPClient = ({
 
         sendApp(json2xml(jsonObject, false)).then(() => {
           resolve();
+          return;
         }).catch((err) => {
           reject(`setApplicationParam() error : ${err}`);
+          return;
         });
       }).catch((e) => {
         reject(`setApplicationParam(): Work not found (${uid}) : ${e}`);
+        return;
       });
     });
   }
@@ -860,18 +887,20 @@ const createXWHEPClient = ({
         }
 
         jsonObject.xwhep.work[0][paramName] = paramValue;
-//      console.log("setWorkParam(",uid,",",paramName,",", paramValue,") send = ", json2xml(jsonObject, false));
-      console.log("setWorkParam(",uid,",",paramName,",", paramValue,")");
+        console.log("setWorkParam(",uid,",",paramName,",", paramValue,")");
         sendWork(json2xml(jsonObject, false)).then(() => {
-          resolve();
-        }).catch((err) => {
-          reject(`setWorkParam() error : ${err}`);
-        });
-      }).catch((e) => {
-        reject(`setWorkParam(): Work not found (${uid}) : ${e}`);
+        resolve();
+        return;
+      }).catch((err) => {
+        reject(`setWorkParam() error : ${err}`);
+        return;
       });
+    }).catch((e) => {
+      reject(`setWorkParam(): Work not found (${uid}) : ${e}`);
+      return;
     });
-  }
+  });
+}
 
   /**
    * This retrieves a parameter for the provided work.
@@ -886,14 +915,11 @@ const createXWHEPClient = ({
   function getWorkParam(uid, paramName) {
     return new Promise((resolve, reject) => {
       get(uid).then((getResponse) => {
-//        console.log(`getWorkParam (${uid}, ${paramName}) = ${getResponse}`);
 
         let jsonObject;
         parseString(getResponse, (err, result) => {
           jsonObject = JSON.parse(JSON.stringify(result));
         });
-
-//        console.log(`getWorkParam ${JSON.stringify(jsonObject)}`);
 
         if (jsonObject.xwhep.work === undefined) {
           reject(`getWorkParam(): Not a work : ${uid}`);
@@ -905,11 +931,12 @@ const createXWHEPClient = ({
           reject(`getWorkParam() : Invalid work parameter : ${paramName}`);
           return;
         }
-//        console.log(`getWorkParam ${paramValue}`);
 
         resolve(paramValue);
+  	    return;
       }).catch((e) => {
         reject(`getWorkParam(): Work not found (${uid}) : ${e}`);
+        return;
       });
     });
   }
@@ -964,11 +991,14 @@ const createXWHEPClient = ({
 
         sendWork(json2xml(jsonObject, false)).then(() => {
           resolve();
+          return;
         }).catch((err) => {
           reject(`setPending() error : ${err}`);
+          return;
         });
       }).catch((e) => {
         reject(`setPending(): Work not found (${uid}) : ${e}`);
+        return;
       });
     });
   }
@@ -992,6 +1022,7 @@ const createXWHEPClient = ({
           return;
   	    }
         resolve(wFile)
+  	    return;
 	  })
     })
   )
@@ -1032,25 +1063,31 @@ const createXWHEPClient = ({
           	    console.log(`setStdinUri(${workUid}) ${workUid}#stdinuri = ${stdinUri}`);
        	        fs.unlink(dataFile);
        	        resolve();
+       	        return;
           	  }).catch((err) => {
                 fs.unlink(dataFile);
           	    reject(`setStdinUri() setWorkParam error : ${err}`);
+          	    return;
           	  });
       	    }).catch((err) => {
         	  fs.unlink(dataFile);
         	  reject(`setStdinUri() get data error : ${err}`);
+        	  return;
             });
       	  }).catch((err) => {
       		fs.unlink(dataFile);
       		reject(`setStdinUri() uploadData error : ${err}`);
+      	    return;
           });
         }).catch((err) => {
           console.log(`setStdinUri() writeFile error : ${err}`);
       	  reject(`setStdinUri() writeFile error : ${err}`);
+      	  return;
         });
       }).catch((err) => {
         console.log(`setStdinUri sendData error : ${err}`);
   		reject(`setStdinUri() sendData error : ${err}`);
+  	    return;
       });
 	})
   )
@@ -1073,17 +1110,22 @@ const createXWHEPClient = ({
           setStdinUri(workUid, stdinContent).then(() => {
             setPending(workUid).then(() => {
               resolve(workUid);
+              return;
             }).catch((msg) => {
               reject("submit() setPending error : ", msg);
+              return;
             });
           }).catch((msg) => {
             reject("submit() setWorkParam error : ", msg);
+      	    return;
           });
         }).catch((msg) => {
           reject("submit() setStdinUri error : ", msg);
+          return;
         });
       }).catch((msg) => {
         reject("submit() register error : ", msg);
+  	    return;
       });
     })
   )
@@ -1119,6 +1161,7 @@ const createXWHEPClient = ({
       const outputStream = fs.createWriteStream(downloadedPath);
       outputStream.on('error', (e) => {
         reject(`download() : pipe error ${e}`);
+  	    return;
       }).on('data', (d) => {
 //        console.log(d);
       }).on('finish', () => {
@@ -1132,6 +1175,7 @@ const createXWHEPClient = ({
         .on('error', (response) => {
           console.error(`download() : request error ${response}`);
           reject(`download() : request error ${response}`);
+          return;
         })
         .pipe(outputStream);
     });
@@ -1154,6 +1198,7 @@ const createXWHEPClient = ({
       const outputStream = fs.createWriteStream(downloadedPath);
       outputStream.on('error', (e) => {
         reject(`download() : pipe error ${e}`);
+  	    return;
       }).on('data', (d) => {
 //        console.log(d);
       }).on('finish', () => {
@@ -1167,6 +1212,7 @@ const createXWHEPClient = ({
         .on('error', (response) => {
           console.error(`downloadURL() : request error ${response}`);
           reject(`download() : request error ${response}`);
+    	    return;
         })
         .pipe(outputStream);
     });
@@ -1208,6 +1254,7 @@ const createXWHEPClient = ({
         resolve(get(resultUid));
       }).catch((err) => {
         reject(`getResult() error : ${err}`);
+  	    return;
       });
     });
   }
@@ -1258,11 +1305,14 @@ const createXWHEPClient = ({
         download(dataUri.toString(), resultPath).then((downloadedPath) => {
           console.log(`downloadResult() : ${downloadedPath}`);
           resolve(downloadedPath);
+          return;
         }).catch((msg) => {
           console.error(msg);
         });
       }).catch((msg) => {
         console.error(msg);
+        reject(msg);
+        return;
       });
     });
   }
@@ -1290,6 +1340,7 @@ const createXWHEPClient = ({
           }
         });
         reject(`getResultPath() : file not found ${uid}`);
+  	    return;
       });
     });
   }
@@ -1331,6 +1382,7 @@ const createXWHEPClient = ({
 
       req.on('error', (e) => {
         reject(e);
+  	    return;
       });
       req.end();
     });
@@ -1368,6 +1420,7 @@ const createXWHEPClient = ({
         }).catch((e) => {
           clearInterval(theInterval);
           reject(`waitCompleted() : ${e}`);
+          return;
         });
       }, WAITSTATUSDELAY);
     });
@@ -1396,17 +1449,22 @@ const createXWHEPClient = ({
             getResultPath(workuid).then((resultPath) => {
               console.log(`submitAndWait() path ${resultPath}`);
               resolve([workuid,resultPath]);
+              return;
             }).catch((msg) => {
               reject(`submitAndWait() 1 : ${msg}`);
+              return;
             });
           }).catch((msg) => {
             reject(`submitAndWait() 2 : ${msg}`);
+      	    return;
           });
         }).catch((e) => {
           reject(`submitAndWait() 3 : ${e}`);
+          return;
         });
       }).catch((e) => {
         reject(`submitAndWait() 4 : ${e}`);
+  	    return;
       });
     });
   }
@@ -1432,11 +1490,14 @@ const createXWHEPClient = ({
         console.log(`submitAndWaitAndGetResult() path ${resultPath}`);
         dumpFile(resultPath).then((textContent) => {
           resolve([workuid,textContent]);
+          return;
         }).catch((msg) => {
           reject(`submitAndWaitAndGetResult() : ${msg}`);
+          return;
         });
       }).catch((e) => {
         reject(`submitAndWaitAndGetResult() : ${e}`);
+  	    return;
       });
     });
   }
@@ -1455,6 +1516,7 @@ const createXWHEPClient = ({
 
       readableStream.on('error', (err) => {
         reject(err);
+  	    return;
       });
       readableStream.on('data', (chunk) => {
         data += chunk;
@@ -1462,6 +1524,7 @@ const createXWHEPClient = ({
 
       readableStream.on('end', () => {
         resolve(data);
+        return;
       });
     });
   }
@@ -1483,11 +1546,19 @@ const createXWHEPClient = ({
           console.log(`getStdout() path ${resultPath}`);
           dumpFile(resultPath).then((textContent) => {
             resolve(textContent);
-          }).catch(msg => reject(`getStdout() : ${msg}`));
+      	    return;
+          }).catch((msg) => {
+        	reject(`getStdout() : ${msg}`);
+      	    return;
+          })
         }).catch((msg) => {
           reject(`getStdout() : ${msg}`);
+          return;
         });
-      }).catch(msg => reject(`getStdout() : ${msg}`));
+      }).catch((msg) => {
+    	reject(`getStdout() : ${msg}`);
+    	return;
+      })
     });
   }
 

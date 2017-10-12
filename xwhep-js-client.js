@@ -644,17 +644,17 @@ const createXWHEPClient = ({
 
 	return new Promise((resolve, reject) => {
       if ((_os === undefined) || (_cpu === undefined) || (binaryUrl === undefined)) {
-        reject(new Error(`setApplicationBinary() : OS or CPU undefined`));
+        reject(`setApplicationBinary() : OS or CPU undefined`);
       }
 
       os = _os.toUpperCase();
       cpu = _cpu.toUpperCase();
 
       if (!(cpu in knownCPUs)) {
-        reject(new Error(`setApplicationBinary() : unknown CPU "${cpu}"`));
+        reject(`setApplicationBinary() : unknown CPU "${cpu}"`);
       }
       if (!(os in knownOSes)) {
-        reject(new Error(`setApplicationBinary() : unknown OS "${os}"`));
+        reject(`setApplicationBinary() : unknown OS "${os}"`);
       }
 
       let binaryURI;
@@ -664,12 +664,18 @@ const createXWHEPClient = ({
       console.log(`setApplicationBinary binaryURI.protocol : ${binaryURI.protocol}`);
 
 	  if(binaryURI.protocol == "file:") {
+		const dataFile = binaryURI.pathname;
+		const stats = fs.statSync(dataFile);
+		const dataSize = stats['size'];
+		console.log(`setApplicationBinary ${dataSize}`);
+		if(dataSize < 55) {
+			reject(`setApplicationBinary() : binaryfile.size < 55 ???`);
+		}
         const dataUid = uuidV4();
         const dataDescription = `<data><uid>${dataUid}</uid><accessrights>0x755</accessrights><type>BINARY</type><name>fileName</name><cpu>${cpu}</cpu><os>${os}</os><status>UNAVAILABLE</status></data>`;
 
         sendData(dataDescription).then(() => {
 
-          const dataFile = binaryURI.pathname; 
     	  console.log(`setApplicationBinary() dataFile ${dataFile}`);
 
     	  uploadData(dataUid, dataFile).then(() => {
@@ -745,7 +751,7 @@ const createXWHEPClient = ({
 
       const appUid = hashtableAppNames[appName];
 
-      const workDescription = `<work><uid>${workUid}</uid><accessrights>0x755</accessrights><appuid>${appUid}</appuid><status>UNAVAILABLE</status></work>`;
+      const workDescription = `<work><uid>${workUid}</uid><accessrights>0x755</accessrights><appuid>${appUid}</appuid><sgid></sgid><status>UNAVAILABLE</status></work>`;
       sendWork(workDescription).then(() => {
         sendWork(workDescription).then(() => { // a 2nd time to force status to UNAVAILABLE
           resolve(workUid);
@@ -996,7 +1002,7 @@ const createXWHEPClient = ({
       const dataUid = uuidV4();
       const dataDescription = `<data><uid>${dataUid}</uid><accessrights>0x755</accessrights><name>stdin.txt</name><status>UNAVAILABLE</status></data>`;
       sendData(dataDescription).then(() => {
-    	writeFile(dataUid, stdinContent).then((dataFile) =>{  	
+    	writeFile(dataUid, stdinContent.concat("                                                            ")).then((dataFile) =>{  	
       	  uploadData(dataUid, dataFile).then(() => {
             get(dataUid).then((getResponse) => {
               let jsonObject;

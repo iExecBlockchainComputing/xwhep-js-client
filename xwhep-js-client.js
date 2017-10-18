@@ -7,7 +7,7 @@ const request = require('request');
 const json2xml = require('json2xml');
 const FormData = require('form-data');
 const md5File = require('md5-file');
-const unzip= require('unzip');
+const unzip = require('unzip');
 
 /*
  * This is the delay between between two get status calls
@@ -374,7 +374,7 @@ const createXWHEPClient = ({
     return new Promise((resolve, reject) => {
       const uploadDataPath = `${PATH_UPLOADDATA}/${dataUid}`;
       const options = {
-        hostname : hostname,
+        hostname,
         port : port,
         path : `${PATH_UPLOADDATA}/${dataUid}${CREDENTIALS}`,
         method : 'POST',
@@ -591,14 +591,14 @@ const createXWHEPClient = ({
    * This registers a new deployable application
    * This is a public method implemented in the smart contract
    * It is the caller responsibility to ensure appName does not already exist
-   * @param appName is the application name;  
+   * @param appName is the application name;
    *        application name is set as "appName_creator" and this is unic
-   *        If one given creator calls this method twice or more, 
-   *        this does not insert a new application, but updates application 
+   *        If one given creator calls this method twice or more,
+   *        this does not insert a new application, but updates application
    *        which name is "appName_creator"
    * @param os  is the binary operating system; must be in knownOSes
    * @param cpu is the binary CPU type; must be in knownCPUs
-   * @param binaryUrl is the URI where to find the binary; 
+   * @param binaryUrl is the URI where to find the binary;
    *        binary is uploaded to XWHEP server, if its a "file://"
    * @return a new Promise
    * @resolve the new app uid
@@ -1047,7 +1047,7 @@ const createXWHEPClient = ({
       const dataUid = uuidV4();
       const dataDescription = `<data><uid>${dataUid}</uid><accessrights>0x755</accessrights><name>stdin.txt</name><status>UNAVAILABLE</status></data>`;
       sendData(dataDescription).then(() => {
-    	writeFile(dataUid, stdinContent.concat("                                                            ")).then((dataFile) =>{  	
+    	writeFile(dataUid, stdinContent.concat("                                                            ")).then((dataFile) =>{
       	  uploadData(dataUid, dataFile).then(() => {
             get(dataUid).then((getResponse) => {
               let jsonObject;
@@ -1599,6 +1599,36 @@ const createXWHEPClient = ({
     });
   }
 
+  async function auth(jwtoken) {
+    return new Promise((resolve, reject) => {
+      const options = {
+        hostname,
+        port,
+        path: '/ethauth',
+        method: 'GET',
+        rejectUnauthorized: false,
+        Cookie: `ethauthtoken=${jwtoken}`,
+      };
+      const req = https.request(options, (res) => {
+        console.log('statusCode:', res.statusCode);
+        console.log('headers:', res.headers);
+        res.on('data', (d) => {});
+
+        res.on('end', () => {
+          resolve();
+          return;
+        });
+      });
+
+      req.on('error', (e) => {
+        console.log('error', e)
+        reject(e);
+        return;
+      });
+      req.end();
+    })
+  }
+
   return {
     connectionError,
     sendWork,
@@ -1627,6 +1657,7 @@ const createXWHEPClient = ({
     submitAndWaitAndGetStdout,
     dumpFile,
     getStdout,
+    auth,
   };
 };
 module.exports = createXWHEPClient;

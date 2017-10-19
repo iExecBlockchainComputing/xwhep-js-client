@@ -1489,20 +1489,54 @@ const createXWHEPClient = ({
         [workuid, resultPath] = results;
         console.log('submitAndWaitAndGetResult() submitAndWait done');
         console.log(`submitAndWaitAndGetResult() path ${resultPath}`);
-
-          dumpFile(resultPath).then((textContent) => {
-            resolve([workuid,textContent]);
+        stdoutPath(resultPath,submitTxHash).then((stdoutPath) => {
+            dumpFile(stdoutPath).then((textContent) => {
+              resolve([workuid,textContent]);
+              return;
+            }).catch((msg) => {
+              reject(`submitAndWaitAndGetResult() dumpFile call : ${msg}`);
+              return;
+            });
+        }).catch((e) => {
+            reject(`submitAndWaitAndGetResult() stdoutPath call : ${e}`);
             return;
-          }).catch((msg) => {
-            reject(`submitAndWaitAndGetResult() : ${msg}`);
-            return;
-          });
+        });
       }).catch((e) => {
-        reject(`submitAndWaitAndGetResult() : ${e}`);
+        reject(`submitAndWaitAndGetResult() submitAndWait call : ${e}`);
   	    return;
       });
     });
   }
+
+
+    /**
+     * This unzip the result file if needed
+     * This is a private method not implemented in the smart contract
+     * @param path is the text file path
+     * @return a new Promise
+     * @resolve a String containing the stdout path
+     */
+    function stdoutPath(resultPath,submitTxHash) {
+        return new Promise((resolve, reject) => {
+              if (!resultPath.endsWith(".zip")) {
+              resolve(resultPath);
+              return;
+             }
+             else{
+              fs.createReadStream(resultPath)
+                  .pipe(unzip.Extract({ path: submitTxHash+'-result' }))
+                  .on('close', function () {
+                      resolve(submitTxHash+'-result/stdout.txt');
+                      return;
+                  })
+                  .on('error', function(err) {
+                      reject(`stdoutPath() : unizp failed ${err}`);
+                      return;
+                  });
+            }
+      });
+    }
+
 
 
   /**

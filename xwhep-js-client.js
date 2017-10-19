@@ -533,22 +533,31 @@ const createXWHEPClient = ({
    * @see getApp(appUid)
    */
   function getApps() {
+    console.log('1')
     return new Promise((resolve, reject) => {
       let getAppsResponse = '';
       const options = {
         hostname,
         port,
-        path: `${PATH_GETAPPS + CREDENTIALS}`,
+        // path: `${PATH_GETAPPS + CREDENTIALS}`,
+        path: PATH_GETAPPS,
         method: 'GET',
         rejectUnauthorized: false,
+        headers: {
+          Cookie: 'JSESSIONID=13do4tg817nwjmz0zk44abzqc',
+          // Cookie: 'JSESSIONID=qm8sv9qc3zrequkzdhomujqn;Path=/;Secure',
+        },
       };
-//      console.log('options', options);
+      console.log('options', options);
       const req = https.request(options, (res) => {
+        console.log('statusCode:', res.statusCode);
+        console.log('headers:', res.headers);
         res.on('data', (d) => {
           const strd = String.fromCharCode.apply(null, new Uint16Array(d));
           getAppsResponse += strd;
         });
         res.on('end', () => {
+          console.log('getAppsResponse', getAppsResponse)
           parseString(getAppsResponse, (err, result) => {
             if ((result === null) || (result === '') || (result === undefined)) {
               reject('getApps() : connection Error');
@@ -1607,8 +1616,11 @@ const createXWHEPClient = ({
         path: '/ethauth',
         method: 'GET',
         rejectUnauthorized: false,
-        Cookie: `ethauthtoken=${jwtoken}`,
+        headers: {
+          Cookie: `ethauthtoken=${jwtoken}`,
+        },
       };
+      console.log('options', options);
       const req = https.request(options, (res) => {
         console.log('statusCode:', res.statusCode);
         console.log('headers:', res.headers);

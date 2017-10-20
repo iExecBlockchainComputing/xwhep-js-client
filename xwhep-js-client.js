@@ -471,7 +471,7 @@ const createXWHEPClient = ({
    */
 
   function get(uid,provider) {
-    new Promise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       let getResponse = '';
       const mandatPath=getMandatPath(provider);
       const getPath = `${PATH_GET}/${uid}`;
@@ -500,8 +500,8 @@ const createXWHEPClient = ({
         return;
       });
       req.end();
-    })
-  );
+    });
+   }
   /**
    * This retrieves an application
    * This is a private method not implemented in the smart contract
@@ -605,14 +605,14 @@ const createXWHEPClient = ({
    * This registers a new deployable application
    * This is a public method implemented in the smart contract
    * It is the caller responsibility to ensure appName does not already exist
-   * @param appName is the application name;  
+   * @param appName is the application name;
    *        application name is set as "appName_creator" and this is unic
-   *        If one given creator calls this method twice or more, 
-   *        this does not insert a new application, but updates application 
+   *        If one given creator calls this method twice or more,
+   *        this does not insert a new application, but updates application
    *        which name is "appName_creator"
    * @param os  is the binary operating system; must be in knownOSes
    * @param cpu is the binary CPU type; must be in knownCPUs
-   * @param binaryUrl is the URI where to find the binary; 
+   * @param binaryUrl is the URI where to find the binary;
    *        binary is uploaded to XWHEP server, if its a "file://"
    * @return a new Promise
    * @resolve the new app uid
@@ -1061,7 +1061,7 @@ const createXWHEPClient = ({
       const dataUid = uuidV4();
       const dataDescription = `<data><uid>${dataUid}</uid><accessrights>0x755</accessrights><name>stdin.txt</name><status>UNAVAILABLE</status></data>`;
       sendData(dataDescription,provider).then(() => {
-    	writeFile(dataUid, stdinContent.concat("                                                            ")).then((dataFile) =>{  	
+    	writeFile(dataUid, stdinContent.concat("                                                            ")).then((dataFile) =>{
       	  uploadData(dataUid, dataFile,provider).then(() => {
             get(dataUid,provider).then((getResponse) => {
               let jsonObject;

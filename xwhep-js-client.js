@@ -514,6 +514,8 @@ const createXWHEPClient = ({
     return new Promise((resolve, reject) => {
       get(appUid,provider).then((getResponse) => {
         let jsonObject;
+      console.log("getApp");
+        console.log(getResponse);
         parseString(getResponse, (err, result) => {
           jsonObject = JSON.parse(JSON.stringify(result));
         });

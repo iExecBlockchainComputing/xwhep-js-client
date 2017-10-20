@@ -3,12 +3,20 @@ const createXWHEPClient = require('../xwhep-js-client');
 const xwhep = createXWHEPClient({
   login: '',
   password: '',
-  hostname: 'xw.iex.ec',
-  port: '443',
+  hostname: '',
+  port: '',
 });
 
+
 const jwtoken = '';
-xwhep.auth(jwtoken);
+xwhep.auth(jwtoken).then((cookies) => {
+//	xwhep.getApps(cookies).then(console.log);
+	xwhep.submit(cookies, "user", "provider", "creator", "ls", "-la", "stdinContent pouet").then(console.log);
+//	xwhep.get(cookies,"11077b77-4f4d-473a-8739-7caa0dfa4bea").then(console.log);
+}).catch((e) => {
+    console.log('error ', e);
+});
+
 //xwhep.sendData("<data><uid>72DED894-8972-4441-961E-D58C73FA5778</uid><accessrights>0x755</accessrights><status>UNAVAILABLE</status></data>").then(console.log);
 //xwhep.get("0bd208fc-3322-4c38-8a89-8b7dae374f4d").then(console.log);
 // xwhep.submit("user", "provider", "creator", "ls", "-la", "stdinContent pouet").then(console.log);

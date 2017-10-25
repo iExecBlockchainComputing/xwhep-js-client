@@ -368,11 +368,8 @@ const createXWHEPClient = ({
 
   	  var state = "";
       if(cookies !== undefined) {
-    	debug(`sendWork(${cookies}) : cookies = ${cookies}`);
     	state = getCookie(cookies, STATENAME);
       }
-
-	  debug(`sendWork(${cookies}) ; ${STATENAME} = ${state}`);
 
 	  var creds = CREDENTIALS;
 	  if (state !== "") {
@@ -386,7 +383,7 @@ const createXWHEPClient = ({
         method: 'GET',
         rejectUnauthorized: false,
       };
-//      debug(`${options.hostname}:${options.port}${sendWorkPath}`);
+      debug('sendWork()', options);
 
       const req = https.request(options, (res) => {
         res.on('data', (d) => {
@@ -427,21 +424,14 @@ const createXWHEPClient = ({
 
       var creds = CREDENTIALS;
 
-      if((provider !== undefined) && (provider !== "")) {
-          creds = `${CREDENTIALS}&${MANDATVARIABLENAME}=${provider}`;
-      }
-      else {
-    	  if((cookies !== undefined) && (cookies[0] !== undefined)) {
-    		var cookie = cookies[0];
-    		debug(`sendWork(${cookies}) : cookie = ${cookie}`);
-    		state = getCookie(cookies, STATENAME);
-    	  }
-    	  debug(`sendWork(${cookies}) ; ${STATENAME} = ${state}`);
+  	  if((cookies !== undefined) && (cookies[0] !== undefined)) {
+  		var cookie = cookies[0];
+  		state = getCookie(cookies, STATENAME);
+  	  }
 
-    	  if (state !== "") {
-    		creds = `?${STATENAME}=${state}`;
-    	  }
-      }
+  	  if (state !== "") {
+  		creds = `?${STATENAME}=${state}`;
+  	  }
       const options = {
         hostname,
         port,
@@ -449,7 +439,7 @@ const createXWHEPClient = ({
         method: 'GET',
         rejectUnauthorized: false,
       };
-      debug('sendApp()', `${options.hostname}:${options.port}${options.path}`);
+      debug('sendApp()', options);
 
       const req = https.request(options, (res) => {
         res.on('data', (d) => {
@@ -483,12 +473,8 @@ const createXWHEPClient = ({
       var state = "";
       if((cookies !== undefined) && (cookies[0] !== undefined)) {
     	var cookie = cookies[0];
-    	debug(`sendWork(${cookies}) : cookie = ${cookie}`);
     	state = getCookie(cookies, STATENAME);
       }
-
-      debug(`sendWork(${cookies}) ; ${STATENAME} = ${state}`);
-
       var creds = CREDENTIALS;
       if (state !== "") {
     	creds = `?${STATENAME}=${state}`;
@@ -502,18 +488,12 @@ const createXWHEPClient = ({
         protocol : 'https:',
         rejectUnauthorized: false
       };
-      debug(`uploadData(${dataUid}) : ${options.hostname}:${options.port}${options.path}`);
+      debug('uploadData()', options);
 
       const stats = fs.statSync(dataPath);
-//      debug(stats);
-      const dataSize = stats['size'];
+      const dataSize = stats.size;
 
       const dataMD5 = md5File.sync(dataPath);
-
-//      debug('uploadData DATAUID ', dataUid);
-//      debug('uploadData DATAMD5SUM ', dataMD5);
-//      debug('uploadData DATASIZE ', dataSize);
-//      debug('uploadData DATAFILE ', dataPath);
 
       const dataForm = new FormData();
       dataForm.append('DATAUID', dataUid);
@@ -543,11 +523,8 @@ const createXWHEPClient = ({
 	 var state = "";
 	 if((cookies !== undefined) && (cookies[0] !== undefined)) {
 	   var cookie = cookies[0];
-	   debug(`sendWork(${cookies}) : cookie = ${cookie}`);
 	   state = getCookie(cookies, STATENAME);
 	 }
-
-	 debug(`sendWork(${cookies}) ; ${STATENAME} = ${state}`);
 
 	 var creds = CREDENTIALS;
 	 if (state !== "") {
@@ -562,7 +539,7 @@ const createXWHEPClient = ({
         protocol : 'https:',
         rejectUnauthorized: false,
       };
-      debug(`sendData() : ${options.hostname}:${options.port}${sendDataPath}`);
+      debug('sendData()', options);
 
       const req = https.request(options, (res) => {
 
@@ -597,7 +574,6 @@ const createXWHEPClient = ({
       var state = "";
       if((cookies !== undefined) && (cookies[0] !== undefined)) {
     	var cookie = cookies[0];
-    	debug(`sendWork(${cookies}) : cookie = ${cookie}`);
     	state = getCookie(cookies, STATENAME);
       }
 
@@ -614,7 +590,7 @@ const createXWHEPClient = ({
         method: 'GET',
         rejectUnauthorized: false,
       };
-	  debug(`get(${cookies}, ${uid}) ; ${options}`);
+      debug('get', options);
 
       const req = https.request(options, (res) => {
         res.on('data', (d) => {
@@ -623,7 +599,7 @@ const createXWHEPClient = ({
         });
 
         res.on('end', () => {
-          debug(`get() : ${getResponse}`);
+          debug('get()  res:', getResponse);
           resolve(getResponse);
           return;
         });
@@ -792,8 +768,8 @@ const createXWHEPClient = ({
         return;
 	  }
 
-	  os = _os.toUpperCase();
-	  cpu = _cpu.toUpperCase();
+      const os = _os.toUpperCase();
+      const cpu = _cpu.toUpperCase();
 
 	  if (!(cpu in knownCPUs)) {
         reject(`registerApp() : unknown CPU "${cpu}"`);
@@ -804,20 +780,19 @@ const createXWHEPClient = ({
         return;
 	  }
 
-	  debug(`registerApp (${appName}, ${os}, ${cpu}, ${binaryUrl})`);
 
       const appUid = uuidV4();
-      debug(`registerApp appUid = ${appUid}`);
+      debug(`registerApp (${appName}, ${os}, ${cpu}, ${binaryUrl})`);
 
       const appDescription = `<app><uid>${appUid}</uid><name>${appName}</name><type>DEPLOYABLE</type><accessrights>0x755</accessrights></app>`;
       sendApp(cookies, provider, appDescription).then(() => {
-    	setApplicationBinary(cookies, appUid, os, cpu, binaryUrl).then(() => {
-    	  resolve(appUid);
-    	  return;
-    	}).catch((err) => {
-    	  reject(`registerApp() setApplicationBinary error : ${err}`);
-    	  return;
-    	});
+        setApplicationBinary(cookies, appUid, os, cpu, binaryUrl).then(() => {
+          resolve(appUid);
+          return;
+        }).catch((err) => {
+          reject(`registerApp() setApplicationBinary error : ${err}`);
+          return;
+        });
       }).catch((err) => {
         reject(`registerApp() sendApp error : ${err}`);
         return;
@@ -834,15 +809,14 @@ const createXWHEPClient = ({
    * @exception is thrown on error
    */
   function setApplicationBinary(cookies, appUid, _os, _cpu, binaryUrl) {
-
-	return new Promise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       if ((_os === undefined) || (_cpu === undefined) || (binaryUrl === undefined)) {
         reject(`setApplicationBinary() : OS or CPU undefined`);
         return;
       }
 
-      os = _os.toUpperCase();
-      cpu = _cpu.toUpperCase();
+      const os = _os.toUpperCase();
+      const cpu = _cpu.toUpperCase();
 
       if (!(cpu in knownCPUs)) {
         reject(`setApplicationBinary() : unknown CPU "${cpu}"`);
@@ -856,76 +830,55 @@ const createXWHEPClient = ({
       let binaryURI;
       binaryURI = new URL(binaryUrl);
 
-      debug(`setApplicationBinary (${appUid}, ${os}, ${cpu}, ${binaryURI}) : ${binaryURI.protocol}`);
-      debug(`setApplicationBinary binaryURI.protocol : ${binaryURI.protocol}`);
+      debug(`setApplicationBinary(${appUid}, ${os}, ${cpu}, ${binaryURI})`);
+      debug('setApplicationBinary() binaryURI.protocol', binaryURI.protocol);
 
-	  if(binaryURI.protocol == "file:") {
-		const dataFile = binaryURI.pathname;
-		const stats = fs.statSync(dataFile);
-		const dataSize = stats['size'];
-		debug(`setApplicationBinary ${dataSize}`);
-		// if(dataSize < 55) {
-		// 	reject(`setApplicationBinary() : binaryfile.size < 55 ???`);
-		// 	return;
-		// }
-        const dataUid = uuidV4();
-        const dataDescription = `<data><uid>${dataUid}</uid><accessrights>0x755</accessrights><type>BINARY</type><name>fileName</name><cpu>${cpu}</cpu><os>${os}</os><status>UNAVAILABLE</status></data>`;
+      const dataFile = binaryURI.pathname;
+      const stats = fs.statSync(dataFile);
+      const dataSize = stats['size'];
+      debug('setApplicationBinary() app size:', dataSize);
+      // if(dataSize < 55) {
+      // 	reject(`setApplicationBinary() : binaryfile.size < 55 ???`);
+      // 	return;
+      // }
+      const dataUid = uuidV4();
+      const dataDescription = `<data><uid>${dataUid}</uid><accessrights>0x755</accessrights><type>BINARY</type><name>fileName</name><cpu>${cpu}</cpu><os>${os}</os><status>UNAVAILABLE</status></data>`;
+      sendData(cookies, dataDescription).then(() => {
+        uploadData(cookies, dataUid, dataFile).then(() => {
+          get(cookies, dataUid).then((getResponse) => {
+            let jsonObject;
+            parseString(getResponse, (err, result) => {
+          	jsonObject = JSON.parse(JSON.stringify(result));
+            });
 
-        sendData(cookies, dataDescription).then(() => {
+            if (jsonObject.xwhep.data === undefined) {
+              reject(`setApplicationBinary() : can't retrieve data: ${dataUid}`);
+              return;
+            }
 
-    	  debug(`setApplicationBinary() dataFile ${dataFile}`);
+            binaryURI = new URL(jsonObject.xwhep.data[0]['uri']);
 
-    	  uploadData(cookies, dataUid, dataFile).then(() => {
-    		get(cookies, dataUid).then((getResponse) => {
-    		  let jsonObject;
-    		  parseString(getResponse, (err, result) => {
-    			jsonObject = JSON.parse(JSON.stringify(result));
-    		  });
-
-    		  if (jsonObject.xwhep.data === undefined) {
-    			reject(`setApplicationBinary() : can't retrieve data: ${dataUid}`);
-    			return;
-              }
-
-    		  binaryURI = new URL(jsonObject.xwhep.data[0]['uri']);
-
-    		  const appBinaryFieldName = getApplicationBinaryFieldName(os,cpu);
-     		  debug(`setApplicationBinary  setApplicationParam(${appUid}, ${appBinaryFieldName}, ${binaryURI.href})`);
-
-     		  setApplicationParam(cookies, appUid, appBinaryFieldName, binaryURI.href).then(() => {
-     			debug(`setApplicationBinary(${appUid}) ${appUid}#${appBinaryFieldName} = ${binaryURI}`);
-     			resolve();
-     			return;
-     	      }).catch((err) => {
-     	    	reject(`setApplicationBinary() setApplicationParam error : ${err}`);
-     	    	return;
-     	      });
-      	    }).catch((err) => {
-      	     reject(`setApplicationBinary() get data error : ${err}`);
-      	     return;
-      	    });
-      	  }).catch((err) => {
-      		reject(`setApplicationBinary() uploadData error : ${err}`);
- 	    	return;
-      	  });
+            const appBinaryFieldName = getApplicationBinaryFieldName(os, cpu);
+            setApplicationParam(cookies, appUid, appBinaryFieldName, binaryURI.href).then(() => {
+              debug(`setApplicationBinary(${appUid}) ${appUid}#${appBinaryFieldName} = ${binaryURI}`);
+              resolve();
+              return;
+            }).catch((err) => {
+              reject(`setApplicationBinary() setApplicationParam error : ${err}`);
+              return;
+            });
+          }).catch((err) => {
+            reject(`setApplicationBinary() get data error : ${err}`);
+            return;
+          });
         }).catch((err) => {
-          reject(`setApplicationBinary() sendData error : ${err}`);
+          reject(`setApplicationBinary() uploadData error : ${err}`);
           return;
         });
-
-	  } else {
-
-        const appBinaryFieldName = getApplicationBinaryFieldName(os,cpu);
-        debug(`setApplicationBinary  setApplicationParam(${appUid}, ${appBinaryFieldName}, ${binaryURI.href})`);
-        setApplicationParam(cookies, appUid, appBinaryFieldName, binaryURI.href).then(() => {
-		  debug(`setApplicationBinary(${appUid}) ${appUid}#${appBinaryFieldName} = ${binaryURI}`);
-		  resolve();
-          return;
-        }).catch((err) => {
-          reject(`setApplicationBinary() setApplicationParam error : ${err}`);
-          return;
-        });
-	  }
+      }).catch((err) => {
+        reject(`setApplicationBinary() sendData error : ${err}`);
+        return;
+      });
     })
   }
 
@@ -985,17 +938,16 @@ const createXWHEPClient = ({
    * @exception is thrown if parameter is read only (e.g. status, return code, etc.)
    */
   function setApplicationParam(cookies, uid, paramName, paramValue) {
+    debug('setApplicationParam uid', uid);
+    debug('setApplicationParam paramName', paramName);
+    debug('setApplicationParam paramValue', paramValue);
 
-	debug('setApplicationParam uid', uid);
-	debug('setApplicationParam paramName', paramName);
-	debug('setApplicationParam paramValue', paramValue);
-
-	if (!(paramName in appAvailableParameters)) {
-	  return Promise.reject(new Error(`setApplicationParam() : invalid app parameter ${paramName}`));
-	}
-	if (appAvailableParameters[paramName] === false) {
-	  return Promise.reject(new Error(`setApplicationParam() : read only app parameter ${paramName}`));
-	}
+    if (!(paramName in appAvailableParameters)) {
+      return Promise.reject(new Error(`setApplicationParam() : invalid app parameter ${paramName}`));
+    }
+    if (appAvailableParameters[paramName] === false) {
+      return Promise.reject(new Error(`setApplicationParam() : read only app parameter ${paramName}`));
+    }
 
 	return new Promise((resolve, reject) => {
       get(cookies, uid).then((getResponse) => {
@@ -1010,8 +962,12 @@ const createXWHEPClient = ({
         }
 
         jsonObject.xwhep.app[0][paramName] = paramValue;
+        debug('setApplicationParam() paramName', paramName);
+        debug('setApplicationParam() paramValue', paramValue);
+        debug('setApplicationParam() jsonObject.xwhep.app', jsonObject.xwhep.app);
+        const xmlDesc = json2xml(jsonObject, false);
 
-        sendApp(cookies, json2xml(jsonObject, false)).then(() => {
+        sendApp(cookies, '', xmlDesc).then(() => {
           resolve();
           return;
         }).catch((err) => {
@@ -1327,11 +1283,8 @@ const createXWHEPClient = ({
 	  var state = "";
 	  if((cookies !== undefined) && (cookies[0] !== undefined)) {
 		var cookie = cookies[0];
-		debug(`sendWork(${cookies}) : cookie = ${cookie}`);
 		state = getCookie(cookies, STATENAME);
 	  }
-
-	  debug(`sendWork(${cookies}) ; ${STATENAME} = ${state}`);
 
 	  var creds = CREDENTIALS;
 	  if (state !== "") {
@@ -1554,11 +1507,9 @@ const createXWHEPClient = ({
   	  var state = "";
 	  if((cookies !== undefined) && (cookies[0] !== undefined)) {
 		var cookie = cookies[0];
-		debug(`sendWork(${cookies}) : cookie = ${cookie}`);
 		state = getCookie(cookies, STATENAME);
 	  }
 
-	  debug(`sendWork(${cookies}) ; ${STATENAME} = ${state}`);
 
 	  var creds = CREDENTIALS;
 	  if (state !== "") {

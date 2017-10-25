@@ -855,8 +855,8 @@ const createXWHEPClient = ({
               reject(`setApplicationBinary() : can't retrieve data: ${dataUid}`);
               return;
             }
-
-            binaryURI = URL.parse(jsonObject.xwhep.data[0]['uri']);
+            const uriToParse = jsonObject.xwhep.data[0].uri[0]
+            binaryURI = URL.parse(uriToParse);
 
             const appBinaryFieldName = getApplicationBinaryFieldName(os, cpu);
             setApplicationParam(cookies, appUid, appBinaryFieldName, binaryURI.href).then(() => {

@@ -894,35 +894,50 @@ const createXWHEPClient = ({
    * @exception is thrown if application is not found
    * @see #setPending(uid)
    */
-  async function register(cookies, user, provider, creator, appName, submitTxHash) {
+  function register(cookies, user, provider, creator, appName, submitTxHash) {
+    return new Promise((resolve, reject) => {
+      if (!(appName in hashtableAppNames)) {
+    	  getApps().then(() => {
+    		if (!(appName in hashtableAppNames)) {
+    		  return reject(new Error(`register() : application not found ${appName}`));
+    		}
+        const workUid = uuidV4();
 
-	if (!(appName in hashtableAppNames)) {
-	  await getApps().then(() => {
-		if (!(appName in hashtableAppNames)) {
-		  return Promise.reject(new Error(`register() : application not found ${appName}`));
-		}
-	  });
-	}
+        const appUid = hashtableAppNames[appName];
 
-	return new Promise((resolve, reject) => {
-      const workUid = uuidV4();
-
-      const appUid = hashtableAppNames[appName];
-
-      const workDescription = `<work><uid>${workUid}</uid><accessrights>0x755</accessrights><appuid>${appUid}</appuid><sgid>${submitTxHash}</sgid><status>UNAVAILABLE</status></work>`;
-      sendWork(cookies, workDescription).then(() => {
-        sendWork(cookies, workDescription).then(() => { // a 2nd time to force status to UNAVAILABLE
-          resolve(workUid);
-          return;
+        const workDescription = `<work><uid>${workUid}</uid><accessrights>0x755</accessrights><appuid>${appUid}</appuid><sgid>${submitTxHash}</sgid><status>UNAVAILABLE</status></work>`;
+        sendWork(cookies, workDescription).then(() => {
+          sendWork(cookies, workDescription).then(() => { // a 2nd time to force status to UNAVAILABLE
+            resolve(workUid);
+            return;
+          }).catch((err) => {
+            reject(`register() sendWork 2 error : ${err}`);
+            return;
+          });
         }).catch((err) => {
-          reject(`register() sendWork 2 error : ${err}`);
+          reject(`register() sendWork 1 error : ${err}`);
           return;
         });
-      }).catch((err) => {
-        reject(`register() sendWork 1 error : ${err}`);
-        return;
-      });
-    })
+    	  });
+    	}
+        const workUid = uuidV4();
+
+        const appUid = hashtableAppNames[appName];
+
+        const workDescription = `<work><uid>${workUid}</uid><accessrights>0x755</accessrights><appuid>${appUid}</appuid><sgid>${submitTxHash}</sgid><status>UNAVAILABLE</status></work>`;
+        sendWork(cookies, workDescription).then(() => {
+          sendWork(cookies, workDescription).then(() => { // a 2nd time to force status to UNAVAILABLE
+            resolve(workUid);
+            return;
+          }).catch((err) => {
+            reject(`register() sendWork 2 error : ${err}`);
+            return;
+          });
+        }).catch((err) => {
+          reject(`register() sendWork 1 error : ${err}`);
+          return;
+        });
+      })
   }
 
   /**

@@ -4,7 +4,7 @@ const http = require('http');
 const { parseString } = require('xml2js');
 const fs = require('fs');
 const uuidV4 = require('uuid/v4');
-const URL = require('url').Url;
+const URL = require('url');
 const request = require('request');
 const json2xml = require('json2xml');
 const FormData = require('form-data');
@@ -828,7 +828,7 @@ const createXWHEPClient = ({
       }
 
       let binaryURI;
-      binaryURI = new URL(binaryUrl);
+      binaryURI = URL.parse(binaryUrl);
 
       debug(`setApplicationBinary(${appUid}, ${os}, ${cpu}, ${binaryURI})`);
       debug('setApplicationBinary() binaryURI.protocol', binaryURI.protocol);
@@ -856,7 +856,7 @@ const createXWHEPClient = ({
               return;
             }
 
-            binaryURI = new URL(jsonObject.xwhep.data[0]['uri']);
+            binaryURI = URL.parse(jsonObject.xwhep.data[0]['uri']);
 
             const appBinaryFieldName = getApplicationBinaryFieldName(os, cpu);
             setApplicationParam(cookies, appUid, appBinaryFieldName, binaryURI.href).then(() => {
@@ -1804,7 +1804,7 @@ const createXWHEPClient = ({
 //    	debug('statusCode:', res.statusCode);
 //        debug('response.headers :', res.headers);
 //    	debug('response.headers.location :', res.headers.location);
-    	var location = new URL(res.headers.location);
+    	var location = URL.parse(res.headers.location);
 //        debug(`location.path : ${location}`);
 //        debug(`location.search: ${location.search}`);
         const state = location.search.substring(1);

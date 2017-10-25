@@ -1782,7 +1782,7 @@ const createXWHEPClient = ({
  * @return a new Promise
  * @resolve a cookies table to be used to access the server
  */
-  async function auth(jwtoken) {
+  function auth(jwtoken) {
     return new Promise((resolve, reject) => {
       const keepAliveAgent = new http.Agent({ keepAlive: true });
       const options = {

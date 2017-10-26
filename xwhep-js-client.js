@@ -45,8 +45,8 @@ const XMLRPCRESULTMESSAGE = 'MESSAGE';
 /**
  * This are cookies names
  */
-const STATENAME="state";
-const ETHAUTHNAME="ethauthtoken";
+const STATENAME = 'state';
+const ETHAUTHNAME = 'ethauthtoken';
 
 
 /**
@@ -168,11 +168,11 @@ const dataAvailableParameters = {
   uid: false,
   owneruid: false,
   accessrights: true,
-  errormsg:true,
+  errormsg: true,
   mtime: false,
   name: true,
   links: false,
-  insertiondate:false,
+  insertiondate: false,
   osversion: true,
   status: true,
   type: true,
@@ -200,7 +200,7 @@ const knownCPUs = {
   ALPHA: true,
   AMD64: true,
   ARM: true,
-}
+};
 /**
  * This contains known Operating System (OS) names
  * Key is the OS name
@@ -211,37 +211,31 @@ const knownOSes = {
   MACOSX: true,
   SOLARIS: true,
   JAVA: true,
-}
+};
 /**
  * This retrieves a value from a cookie
  * @param cookie is the cookie
  * @param name is the value name
  * @see http://www.w3schools.com/js/js_cookies.asp
  */
-function getCookie(cookie, name)
-{
-  var c_value = cookie.toString();
-  var c_start = c_value.toString().indexOf(` ${name}=`);
+function getCookie(cookie, name) {
+  let cValue = cookie.toString();
+  let cStart = cValue.toString().indexOf(` ${name}=`);
 
-  if (c_start == -1)
-  {
-  	c_start = c_value.toString().indexOf(`${name}=`);
+  if (cStart === -1) {
+    cStart = cValue.toString().indexOf(`${name}=`);
   }
-  if (c_start == -1)
-  {
-    c_value = null;
-  }
-  else
-  {
-    c_start = c_value.indexOf("=", c_start) + 1;
-    var c_end = c_value.indexOf(";", c_start);
-    if (c_end == -1)
-    {
-      c_end = c_value.length;
+  if (cStart === -1) {
+    cValue = null;
+  } else {
+    cStart = cValue.indexOf('=', cStart) + 1;
+    let cEnd = cValue.indexOf(';', cStart);
+    if (cEnd === -1) {
+      cEnd = cValue.length;
     }
-    c_value = unescape(c_value.substring(c_start,c_end));
+    cValue = unescape(cValue.substring(cStart, cEnd));
   }
-  return c_value;
+  return cValue;
 }
 
 /**
@@ -252,12 +246,11 @@ function getCookie(cookie, name)
  * @return a new cookie value
  * @see http://www.w3schools.com/js/js_cookies.asp
  */
-function setCookie(name,value,exdays)
-{
-  var exdate=new Date();
+function setCookie(name, value, exdays) {
+  const exdate = new Date();
   exdate.setDate(exdate.getDate() + exdays);
-  var c_value=escape(value) + ((exdays==null) ? "" : "; expires="+exdate.toUTCString());
-  return name + "=" + c_value;
+  const cValue = escape(value) + ((exdays == null) ? '' : '; expires='.concat(exdate.toUTCString()));
+  return name.concat('=', cValue);
 }
 
 
@@ -267,68 +260,72 @@ function setCookie(name,value,exdays)
  * @param _cpu is the CPU name
  */
 function getApplicationBinaryFieldName(_os, _cpu) {
-
   if ((_os === undefined) || (_cpu === undefined)) {
-	throw new Error('OS or CPU undefined');
+    throw new Error('OS or CPU undefined');
   }
 
-  os = _os.toUpperCase();
-  cpu = _cpu.toUpperCase();
+  const os = _os.toUpperCase();
+  const cpu = _cpu.toUpperCase();
 
-  if (os === "JAVA") {
-	return "javauri";
+  if (os === 'JAVA') {
+    return 'javauri';
   }
 
   switch (os) {
-  case "LINUX":
-	switch (cpu) {
-	case "IX86":
-	  return "linux_ix86uri";
-	case "PPC":
-	  return "linux_ppcuri";
-	case "AMD64":
-	  return "linux_amd64uri";
-	case "X86_64":
-	  return "linux_x86_64uri";
-	case "IA64":
-	  return "linux_ia64uri";
-	default:
-	  break;
-	}
-	break;
-  case "WIN32":
-    switch (cpu) {
-    case "IX86":
-      return "win32_ix86uri";
-    case "AMD64":
-      return "win32_amd64uri";
-    case "X86_64":
-      return "win32_x86_64uri";
+    case 'LINUX':
+      switch (cpu) {
+        case 'IX86':
+          return 'linux_ix86uri';
+        case 'PPC':
+          return 'linux_ppcuri';
+        case 'AMD64':
+          return 'linux_amd64uri';
+        case 'X86_64':
+          return 'linux_x86_64uri';
+        case 'IA64':
+          return 'linux_ia64uri';
+        default:
+          break;
+      }
+      break;
+    case 'WIN32':
+      switch (cpu) {
+        case 'IX86':
+          return 'win32_ix86uri';
+        case 'AMD64':
+          return 'win32_amd64uri';
+        case 'X86_64':
+          return 'win32_x86_64uri';
+        default:
+          break;
+      }
+      break;
+    case 'MACOSX':
+      switch (cpu) {
+        case 'IX86':
+          return 'macos_ix86uri';
+        case 'X86_64':
+          return 'macos_x86_64uri';
+        case 'PPC':
+          return 'macos_ppcuri';
+        default:
+          break;
+      }
+      break;
     default:
       break;
-    }
-    break;
-  case "MACOSX":
-	switch (cpu) {
-	case "IX86":
-	  return "macos_ix86uri";
-	case "X86_64":
-	  return "macos_x86_64uri";
-	case "PPC":
-	  return "macos_ppcuri";
-	default:
-	  break;
-	}
-	break;
   }
   return undefined;
 }
 
 const createXWHEPClient = ({
-  login = '', password = '', hostname = '', port = '',
+  login = '',
+  password = '',
+  hostname = '',
+  port = '',
 }) => {
   const CREDENTIALS = `?XWLOGIN=${encodeURIComponent(login)}&XWPASSWD=${encodeURIComponent(password)}`;
-  const MANDATVARIABLENAME="MANDATINGLOGIN";
+  const MANDATVARIABLENAME = 'MANDATINGLOGIN';
 
 
   /**
@@ -337,7 +334,7 @@ const createXWHEPClient = ({
   const hashtableAppNames = {};
 
   /**
-   * This throws "Connection error"
+   * This throws 'Connection error'
    */
   function connectionError() {
     throw new Error('Connection error');
@@ -365,16 +362,15 @@ const createXWHEPClient = ({
    */
   function sendWork(cookies, xmlWork) {
     return new Promise((resolve, reject) => {
-
-  	  var state = "";
-      if(cookies !== undefined) {
-    	state = getCookie(cookies, STATENAME);
+      let state = '';
+      if (cookies !== undefined) {
+        state = getCookie(cookies, STATENAME);
       }
 
-	  var creds = CREDENTIALS;
-	  if (state !== "") {
-		  creds = `?${STATENAME}=${state}`;
-	  }
+      let creds = CREDENTIALS;
+      if (state !== '') {
+        creds = `?${STATENAME}=${state}`;
+      }
       const sendWorkPath = `${PATH_SENDWORK}?XMLDESC=${xmlWork}`;
       const options = {
         hostname,
@@ -386,18 +382,15 @@ const createXWHEPClient = ({
       debug('sendWork()', options);
 
       const req = https.request(options, (res) => {
-        res.on('data', (d) => {
-        });
+        res.on('data', () => {});
 
         res.on('end', () => {
           resolve();
-          return;
         });
       });
 
       req.on('error', (e) => {
         reject(e);
-        return;
       });
       req.end();
     });
@@ -419,19 +412,18 @@ const createXWHEPClient = ({
    */
   function sendApp(cookies, provider, xmlApp) {
     return new Promise((resolve, reject) => {
+      let state = '';
 
-      var state = "";
+      let creds = CREDENTIALS;
 
-      var creds = CREDENTIALS;
+      if ((cookies !== undefined) && (cookies[0] !== undefined)) {
+        let cookie = cookies[0];
+        state = getCookie(cookies, STATENAME);
+      }
 
-  	  if((cookies !== undefined) && (cookies[0] !== undefined)) {
-  		var cookie = cookies[0];
-  		state = getCookie(cookies, STATENAME);
-  	  }
-
-  	  if (state !== "") {
-  		creds = `?${STATENAME}=${state}`;
-  	  }
+      if (state !== '') {
+        creds = `?${STATENAME}=${state}`;
+      }
       const options = {
         hostname,
         port,
@@ -442,18 +434,15 @@ const createXWHEPClient = ({
       debug('sendApp()', options);
 
       const req = https.request(options, (res) => {
-        res.on('data', (d) => {
-        });
+        res.on('data', () => {});
 
         res.on('end', () => {
           resolve();
-          return;
         });
       });
 
       req.on('error', (e) => {
-    	  reject(e);
-    	  return;
+        reject(e);
       });
       req.end();
     });
@@ -470,23 +459,22 @@ const createXWHEPClient = ({
    */
   function uploadData(cookies, dataUid, dataPath) {
     return new Promise((resolve, reject) => {
-      var state = "";
-      if((cookies !== undefined) && (cookies[0] !== undefined)) {
-    	var cookie = cookies[0];
-    	state = getCookie(cookies, STATENAME);
+      let state = '';
+      if ((cookies !== undefined) && (cookies[0] !== undefined)) {
+        let cookie = cookies[0];
+        state = getCookie(cookies, STATENAME);
       }
-      var creds = CREDENTIALS;
-      if (state !== "") {
-    	creds = `?${STATENAME}=${state}`;
+      let creds = CREDENTIALS;
+      if (state !== '') {
+        creds = `?${STATENAME}=${state}`;
       }
-      const uploadDataPath = `${PATH_UPLOADDATA}/${dataUid}`;
       const options = {
         hostname,
-        port : port,
-        path : `${PATH_UPLOADDATA}/${dataUid}${creds}`,
-        method : 'POST',
-        protocol : 'https:',
-        rejectUnauthorized: false
+        port,
+        path: `${PATH_UPLOADDATA}/${dataUid}${creds}`,
+        method: 'POST',
+        protocol: 'https:',
+        rejectUnauthorized: false,
       };
       debug('uploadData()', options);
 
@@ -496,18 +484,24 @@ const createXWHEPClient = ({
       const dataMD5 = md5File.sync(dataPath);
 
       const dataForm = new FormData();
+      const fileData = fs.readFileSync(dataPath);
+      debug('uploadData() dataMD5', dataMD5);
+      debug('uploadData() dataSize', dataSize);
+      debug('uploadData() fileData', fileData);
+      debug('uploadData() typeof dataSize', typeof dataSize);
+
       dataForm.append('DATAUID', dataUid);
       dataForm.append('DATAMD5SUM', dataMD5);
       dataForm.append('DATASIZE', dataSize);
-      dataForm.append('DATAFILE', fs.createReadStream(dataPath));
-      dataForm.submit(options, function(err, res) {
-    	if (err) {
-           reject('uploadData error ' + err);
-           return;
+      dataForm.append('DATAFILE', fileData);
+      dataForm.submit(options, (err, result) => {
+        if (err) {
+          reject(new Error('uploadData error '.concat(err)));
+          return;
         }
+        debug('dataForm.submit result', result.statusCode);
+        resolve(result);
       });
-      resolve();
-      return;
     });
   }
 
@@ -518,43 +512,39 @@ const createXWHEPClient = ({
    * @return a new Promise
    * @resolve undefined
    */
- function sendData(cookies, xmlData) {
-   return new Promise((resolve, reject) => {
-	 var state = "";
-	 if((cookies !== undefined) && (cookies[0] !== undefined)) {
-	   var cookie = cookies[0];
-	   state = getCookie(cookies, STATENAME);
-	 }
+  function sendData(cookies, xmlData) {
+    return new Promise((resolve, reject) => {
+      let state = '';
+      if ((cookies !== undefined) && (cookies[0] !== undefined)) {
+        let cookie = cookies[0];
+        state = getCookie(cookies, STATENAME);
+      }
 
-	 var creds = CREDENTIALS;
-	 if (state !== "") {
-	   creds = `?${STATENAME}=${state}`;
-	 }
+      let creds = CREDENTIALS;
+      if (state !== '') {
+        creds = `?${STATENAME}=${state}`;
+      }
       const sendDataPath = `${PATH_SENDDATA}?XMLDESC=${xmlData}`;
       const options = {
-        hostname: hostname,
-        port: port,
+        hostname,
+        port,
         path: `${PATH_SENDDATA}${creds}&XMLDESC=${xmlData}`,
         method: 'GET',
-        protocol : 'https:',
+        protocol: 'https:',
         rejectUnauthorized: false,
       };
       debug('sendData()', options);
 
       const req = https.request(options, (res) => {
-
-    	res.on('data', (d) => {
-        });
+        res.on('data', () => {});
 
         res.on('end', () => {
           resolve();
-          return;
         });
       });
 
       req.on('error', (e) => {
         reject(e);
-        return;
       });
       req.end();
     });
@@ -571,16 +561,16 @@ const createXWHEPClient = ({
     new Promise((resolve, reject) => {
       let getResponse = '';
 
-      var state = "";
-      if((cookies !== undefined) && (cookies[0] !== undefined)) {
-    	var cookie = cookies[0];
-    	state = getCookie(cookies, STATENAME);
+      let state = '';
+      if ((cookies !== undefined) && (cookies[0] !== undefined)) {
+        let cookie = cookies[0];
+        state = getCookie(cookies, STATENAME);
       }
 
-	  var creds = CREDENTIALS;
-	  if (state !== "") {
-		  creds = `?${STATENAME}=${state}`;
-	  }
+      let creds = CREDENTIALS;
+      if (state !== '') {
+        creds = `?${STATENAME}=${state}`;
+      }
 
       const getPath = `${PATH_GET}/${uid}`;
       const options = {
@@ -601,13 +591,11 @@ const createXWHEPClient = ({
         res.on('end', () => {
           debug('get()  res:', getResponse);
           resolve(getResponse);
-          return;
         });
       });
 
       req.on('error', (e) => {
         reject(e);
-        return;
       });
       req.end();
     })
@@ -630,7 +618,7 @@ const createXWHEPClient = ({
         });
 
         if (jsonObject.xwhep.app === undefined) {
-          reject(`getApp() : Not an application : ${appUid}`);
+          reject(new Error(`getApp() : Not an application : ${appUid}`));
           return;
         }
 
@@ -643,10 +631,8 @@ const createXWHEPClient = ({
         }
 
         resolve(getResponse);
-  	    return;
       }).catch((e) => {
-        reject(`getApp() : Application not found (${appUid}) : ${e}`);
-        return;
+        reject(new Error(`getApp() : Application not found (${appUid}) : ${e}`));
       });
     });
   }
@@ -663,24 +649,21 @@ const createXWHEPClient = ({
    */
   function getApps(cookies) {
     return new Promise((resolve, reject) => {
+      let state = '';
 
-  	  var state = "";
-
-//	  debug(`getApps(${cookies})`);
-
-	  if((cookies !== undefined) && (cookies[0] !== undefined)) {
-    	var cookie = cookies[0];
-    	debug(`getApps(${cookies}) : cookie = ${cookie}`);
-    	state = getCookie(cookies, STATENAME);
+      if ((cookies !== undefined) && (cookies[0] !== undefined)) {
+        let cookie = cookies[0];
+        debug(`getApps(${cookies}) : cookie = ${cookie}`);
+        state = getCookie(cookies, STATENAME);
       }
 
-	  debug(`getApps(${cookies}) ; ${STATENAME} = ${state}`);
+      debug(`getApps(${cookies}) ; ${STATENAME} = ${state}`);
 
-	  var creds = CREDENTIALS;
-	  if (state !== "") {
-		  creds = `?${STATENAME}=${state}`;
-	  }
-	  var getAppsResponse = '';
+      let creds = CREDENTIALS;
+      if (state !== '') {
+        creds = `?${STATENAME}=${state}`;
+      }
+      let getAppsResponse = '';
       const options = {
         hostname,
         port,
@@ -688,46 +671,44 @@ const createXWHEPClient = ({
         method: 'GET',
         rejectUnauthorized: false,
       };
-     debug('getApps() options', options);
+      debug('getApps() options', options);
       const req = https.request(options, (res) => {
-//        debug('statusCode:', res.statusCode);
-//        debug('headers:', res.headers);
+        //        debug('statusCode:', res.statusCode);
+        //        debug('headers:', res.headers);
         res.on('data', (d) => {
           const strd = String.fromCharCode.apply(null, new Uint16Array(d));
           getAppsResponse += strd;
         });
         res.on('end', () => {
-//          debug('getAppsResponse', getAppsResponse)
+          //          debug('getAppsResponse', getAppsResponse)
           parseString(getAppsResponse, (err, result) => {
             if ((result === null) || (result === '') || (result === undefined)) {
-              reject('getApps() : connection Error');
+              reject(new Error('getApps() : connection Error'));
               return;
             }
             const jsonData = JSON.parse(JSON.stringify(result));
             if (jsonData === null) {
-              reject('getApps() : connection Error');
+              reject(new Error('getApps() : connection Error'));
               return;
             }
             const appsCount = jsonData.xwhep.XMLVector[0].XMLVALUE.length;
             const appuids = [];
             for (let i = 0; i < appsCount; i += 1) {
-              const appuid = JSON.stringify(jsonData.xwhep.XMLVector[0].XMLVALUE[i].$.value).replace(/"/g, '');
+              const appuid = JSON.stringify(jsonData.xwhep.XMLVector[0].XMLVALUE[i].$.value).replace(/'/g, '');
               appuids[i] = appuid;
             }
-            const apppUidPromises = appuids.map(function (x) {
-            	return new Promise((resolve, reject) => {
-            		getApp(cookies, x).then((strxml) => {
-            		  resolve();
-            		}).catch((e) => {reject(`getApp(${x}) ${e}`);});
-            	});
-            });
+            const apppUidPromises = appuids.map(x =>
+              new Promise((resolve, reject) =>
+                getApp(cookies, x).then((strxml) => {
+                  resolve();
+                }).catch((e) => {
+                  reject(new Error(`getApp(${x}) ${e}`));
+                })));
             Promise.all(apppUidPromises).then((xmlStr) => {
               resolve(xmlStr);
-              return;
             }).catch((e) => {
               debug('getApps error ', e);
-              reject(`getApps() : ${e}`)
-        	  return;
+              reject(new Error(`getApps() : ${e}`));
             });
           });
         });
@@ -747,14 +728,14 @@ const createXWHEPClient = ({
    * This is a public method implemented in the smart contract
    * It is the caller responsibility to ensure appName does not already exist
    * @param appName is the application name;
-   *        application name is set as "appName_creator" and this is unic
+   *        application name is set as 'appName_creator' and this is unic
    *        If one given creator calls this method twice or more,
    *        this does not insert a new application, but updates application
-   *        which name is "appName_creator"
+   *        which name is 'appName_creator'
    * @param os  is the binary operating system; must be in knownOSes
    * @param cpu is the binary CPU type; must be in knownCPUs
    * @param binaryUrl is the URI where to find the binary;
-   *        binary is uploaded to XWHEP server, if its a "file://"
+   *        binary is uploaded to XWHEP server, if its a 'file://'
    * @return a new Promise
    * @resolve the new app uid
    * @exception is thrown if application is not found
@@ -762,23 +743,23 @@ const createXWHEPClient = ({
    * @see knownOSes
    */
   function registerApp(cookies, user, provider, creator, appName, _os, _cpu, binaryUrl) {
-	return new Promise((resolve, reject) => {
-	  if ((_os === undefined) || (_cpu === undefined) || (binaryUrl === undefined)) {
-        reject('registerApp() : OS or CPU undefined');
+    return new Promise((resolve, reject) => {
+      if ((_os === undefined) || (_cpu === undefined) || (binaryUrl === undefined)) {
+        reject(new Error('registerApp() : OS or CPU undefined'));
         return;
-	  }
+      }
 
       const os = _os.toUpperCase();
       const cpu = _cpu.toUpperCase();
 
-	  if (!(cpu in knownCPUs)) {
-        reject(`registerApp() : unknown CPU "${cpu}"`);
+      if (!(cpu in knownCPUs)) {
+        reject(new Error(`registerApp() : unknown CPU '${cpu}'`));
         return;
-	  }
-	  if (!(os in knownOSes)) {
-        reject(`registerApp() : unknown OS "${os}"`);
+      }
+      if (!(os in knownOSes)) {
+        reject(new Error(`registerApp() : unknown OS '${os}'`));
         return;
-	  }
+      }
 
 
       const appUid = uuidV4();
@@ -788,14 +769,11 @@ const createXWHEPClient = ({
       sendApp(cookies, provider, appDescription).then(() => {
         setApplicationBinary(cookies, appUid, os, cpu, binaryUrl).then(() => {
           resolve(appUid);
-          return;
         }).catch((err) => {
-          reject(`registerApp() setApplicationBinary error : ${err}`);
-          return;
+          reject(new Error(`registerApp() setApplicationBinary error : ${err}`));
         });
       }).catch((err) => {
-        reject(`registerApp() sendApp error : ${err}`);
-        return;
+        reject(new Error(`registerApp() sendApp error : ${err}`));
       });
     });
   }
@@ -811,7 +789,7 @@ const createXWHEPClient = ({
   function setApplicationBinary(cookies, appUid, _os, _cpu, binaryUrl) {
     return new Promise((resolve, reject) => {
       if ((_os === undefined) || (_cpu === undefined) || (binaryUrl === undefined)) {
-        reject(`setApplicationBinary() : OS or CPU undefined`);
+        reject(new Error(`setApplicationBinary() : OS or CPU undefined`));
         return;
       }
 
@@ -819,11 +797,11 @@ const createXWHEPClient = ({
       const cpu = _cpu.toUpperCase();
 
       if (!(cpu in knownCPUs)) {
-        reject(`setApplicationBinary() : unknown CPU "${cpu}"`);
+        reject(new Error(`setApplicationBinary() : unknown CPU '${cpu}'`));
         return;
       }
       if (!(os in knownOSes)) {
-        reject(`setApplicationBinary() : unknown OS "${os}"`);
+        reject(new Error(`setApplicationBinary() : unknown OS '${os}'`));
         return;
       }
 
@@ -835,11 +813,11 @@ const createXWHEPClient = ({
 
       const dataFile = binaryURI.pathname;
       const stats = fs.statSync(dataFile);
-      const dataSize = stats['size'];
+      const dataSize = stats.size;
       debug('setApplicationBinary() app size:', dataSize);
       // if(dataSize < 55) {
-      // 	reject(`setApplicationBinary() : binaryfile.size < 55 ???`);
-      // 	return;
+      // reject(`setApplicationBinary() : binaryfile.size < 55 ???`);
+      // return;
       // }
       const dataUid = uuidV4();
       const dataDescription = `<data><uid>${dataUid}</uid><accessrights>0x755</accessrights><type>BINARY</type><name>fileName</name><cpu>${cpu}</cpu><os>${os}</os><status>UNAVAILABLE</status></data>`;
@@ -848,38 +826,33 @@ const createXWHEPClient = ({
           get(cookies, dataUid).then((getResponse) => {
             let jsonObject;
             parseString(getResponse, (err, result) => {
-          	jsonObject = JSON.parse(JSON.stringify(result));
+              jsonObject = JSON.parse(JSON.stringify(result));
             });
 
             if (jsonObject.xwhep.data === undefined) {
-              reject(`setApplicationBinary() : can't retrieve data: ${dataUid}`);
+              reject(new Error(`setApplicationBinary() : can't retrieve data: ${dataUid}`));
               return;
             }
-            const uriToParse = jsonObject.xwhep.data[0].uri[0]
+            const uriToParse = jsonObject.xwhep.data[0].uri[0];
             binaryURI = URL.parse(uriToParse);
 
             const appBinaryFieldName = getApplicationBinaryFieldName(os, cpu);
             setApplicationParam(cookies, appUid, appBinaryFieldName, binaryURI.href).then(() => {
               debug(`setApplicationBinary(${appUid}) ${appUid}#${appBinaryFieldName} = ${binaryURI}`);
               resolve();
-              return;
             }).catch((err) => {
-              reject(`setApplicationBinary() setApplicationParam error : ${err}`);
-              return;
+              reject(new Error(`setApplicationBinary() setApplicationParam error : ${err}`));
             });
           }).catch((err) => {
-            reject(`setApplicationBinary() get data error : ${err}`);
-            return;
+            reject(new Error(`setApplicationBinary() get data error : ${err}`));
           });
         }).catch((err) => {
-          reject(`setApplicationBinary() uploadData error : ${err}`);
-          return;
+          reject(new Error(`setApplicationBinary() uploadData error : ${err}`));
         });
       }).catch((err) => {
-        reject(`setApplicationBinary() sendData error : ${err}`);
-        return;
+        reject(new Error(`setApplicationBinary() sendData error : ${err}`));
       });
-    })
+    });
   }
 
   /**
@@ -897,47 +870,42 @@ const createXWHEPClient = ({
   function register(cookies, user, provider, creator, appName, submitTxHash) {
     return new Promise((resolve, reject) => {
       if (!(appName in hashtableAppNames)) {
-    	  getApps().then(() => {
-    		if (!(appName in hashtableAppNames)) {
-    		  return reject(new Error(`register() : application not found ${appName}`));
-    		}
-        const workUid = uuidV4();
+        getApps().then(() => {
+          if (!(appName in hashtableAppNames)) {
+            return reject(new Error(`register() : application not found ${appName}`));
+          }
+          const workUid = uuidV4();
 
-        const appUid = hashtableAppNames[appName];
+          const appUid = hashtableAppNames[appName];
 
-        const workDescription = `<work><uid>${workUid}</uid><accessrights>0x755</accessrights><appuid>${appUid}</appuid><sgid>${submitTxHash}</sgid><status>UNAVAILABLE</status></work>`;
-        sendWork(cookies, workDescription).then(() => {
-          sendWork(cookies, workDescription).then(() => { // a 2nd time to force status to UNAVAILABLE
-            resolve(workUid);
-            return;
+          const workDescription = `<work><uid>${workUid}</uid><accessrights>0x755</accessrights><appuid>${appUid}</appuid><sgid>${submitTxHash}</sgid><status>UNAVAILABLE</status></work>`;
+          return sendWork(cookies, workDescription).then(() => {
+            // a 2nd time to force status to UNAVAILABLE
+            sendWork(cookies, workDescription).then(() => {
+              resolve(workUid);
+            }).catch((err) => {
+              reject(new Error(`register() sendWork 2 error : ${err}`));
+            });
           }).catch((err) => {
-            reject(`register() sendWork 2 error : ${err}`);
-            return;
+            reject(new Error(`register() sendWork 1 error : ${err}`));
           });
-        }).catch((err) => {
-          reject(`register() sendWork 1 error : ${err}`);
-          return;
         });
-    	  });
-    	}
-        const workUid = uuidV4();
+      }
+      const workUid = uuidV4();
 
-        const appUid = hashtableAppNames[appName];
+      const appUid = hashtableAppNames[appName];
 
-        const workDescription = `<work><uid>${workUid}</uid><accessrights>0x755</accessrights><appuid>${appUid}</appuid><sgid>${submitTxHash}</sgid><status>UNAVAILABLE</status></work>`;
-        sendWork(cookies, workDescription).then(() => {
-          sendWork(cookies, workDescription).then(() => { // a 2nd time to force status to UNAVAILABLE
-            resolve(workUid);
-            return;
-          }).catch((err) => {
-            reject(`register() sendWork 2 error : ${err}`);
-            return;
-          });
+      const workDescription = `<work><uid>${workUid}</uid><accessrights>0x755</accessrights><appuid>${appUid}</appuid><sgid>${submitTxHash}</sgid><status>UNAVAILABLE</status></work>`;
+      sendWork(cookies, workDescription).then(() => {
+        sendWork(cookies, workDescription).then(() => { // a 2nd time to force status to UNAVAILABLE
+          resolve(workUid);
         }).catch((err) => {
-          reject(`register() sendWork 1 error : ${err}`);
-          return;
+          reject(new Error(`register() sendWork 2 error : ${err}`));
         });
-      })
+      }).catch((err) => {
+        reject(new Error(`register() sendWork 1 error : ${err}`));
+      });
+    });
   }
 
   /**
@@ -964,7 +932,7 @@ const createXWHEPClient = ({
       return Promise.reject(new Error(`setApplicationParam() : read only app parameter ${paramName}`));
     }
 
-	return new Promise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       get(cookies, uid).then((getResponse) => {
         let jsonObject;
         parseString(getResponse, (err, result) => {
@@ -972,7 +940,7 @@ const createXWHEPClient = ({
         });
 
         if (jsonObject.xwhep.app === undefined) {
-          reject(`setApplicationParam : Not an application : ${uid}`);
+          reject(new Error(`setApplicationParam : Not an application : ${uid}`));
           return;
         }
 
@@ -984,14 +952,11 @@ const createXWHEPClient = ({
 
         sendApp(cookies, '', xmlDesc).then(() => {
           resolve();
-          return;
         }).catch((err) => {
-          reject(`setApplicationParam() error : ${err}`);
-          return;
+          reject(new Error(`setApplicationParam() error : ${err}`));
         });
       }).catch((e) => {
-        reject(`setApplicationParam(): Work not found (${uid}) : ${e}`);
-        return;
+        reject(new Error(`setApplicationParam(): Work not found (${uid}) : ${e}`));
       });
     });
   }
@@ -1011,16 +976,15 @@ const createXWHEPClient = ({
    */
 
   function setWorkParam(cookies, uid, paramName, paramValue) {
+    if (!(paramName in workAvailableParameters)) {
+      return Promise.reject(new Error(`setWorkParam() : Invalid parameter ${paramName}`));
+    }
 
-	if (!(paramName in workAvailableParameters)) {
-	  return Promise.reject(new Error(`setWorkParam() : Invalid parameter ${paramName}`));
-	}
+    if (workAvailableParameters[paramName] === false) {
+      return Promise.reject(new Error(`setWorkParam() : read only parameter ${paramName}`));
+    }
 
-	if (workAvailableParameters[paramName] === false) {
-	  return Promise.reject(new Error(`setWorkParam() : read only parameter ${paramName}`));
-	}
-
-	return new Promise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       get(cookies, uid).then((getResponse) => {
         let jsonObject;
         parseString(getResponse, (err, result) => {
@@ -1028,27 +992,24 @@ const createXWHEPClient = ({
         });
 
         if (jsonObject.xwhep.work === undefined) {
-          reject(`setWorkParam(): Not a work : ${uid}`);
+          reject(new Error(`setWorkParam(): Not a work : ${uid}`));
           return;
         }
         if (jsonObject.xwhep.work[0].status.toString() !== 'UNAVAILABLE') {
-          debug("setWorkParam(",uid,",",paramName,",", paramValue,") invalid Status");
-          reject(`setWorkParam(): Invalid status : ${jsonObject.xwhep.work[0].status}`);
+          debug('setWorkParam(', uid, ',', paramName, ',', paramValue, ') invalid Status');
+          reject(new Error(`setWorkParam(): Invalid status : ${jsonObject.xwhep.work[0].status}`));
           return;
         }
 
         jsonObject.xwhep.work[0][paramName] = paramValue;
-        debug("setWorkParam(",uid,",",paramName,",", paramValue,")");
+        debug('setWorkParam(', uid, ',', paramName, ',', paramValue, ')');
         sendWork(cookies, json2xml(jsonObject, false)).then(() => {
           resolve();
-          return;
         }).catch((err) => {
-          reject(`setWorkParam() sendWork error : ${err}`);
-          return;
+          reject(new Error(`setWorkParam() sendWork error : ${err}`));
         });
       }).catch((e) => {
-        reject(`setWorkParam(): Work not found (${uid}) : ${e}`);
-        return;
+        reject(new Error(`setWorkParam(): Work not found (${uid}) : ${e}`));
       });
     });
   }
@@ -1066,28 +1027,25 @@ const createXWHEPClient = ({
   function getWorkParam(cookies, uid, paramName) {
     return new Promise((resolve, reject) => {
       get(cookies, uid).then((getResponse) => {
-
         let jsonObject;
         parseString(getResponse, (err, result) => {
           jsonObject = JSON.parse(JSON.stringify(result));
         });
 
         if (jsonObject.xwhep.work === undefined) {
-          reject(`getWorkParam(): Not a work : ${uid}`);
+          reject(new Error(`getWorkParam(): Not a work : ${uid}`));
           return;
         }
 
         const paramValue = jsonObject.xwhep.work[0][paramName];
         if (paramValue === undefined) {
-          reject(`getWorkParam() : Invalid work parameter : ${paramName}`);
+          reject(new Error(`getWorkParam() : Invalid work parameter : ${paramName}`));
           return;
         }
 
         resolve(paramValue);
-  	    return;
       }).catch((e) => {
-        reject(`getWorkParam(): Work not found (${uid}) : ${e}`);
-        return;
+        reject(new Error(`getWorkParam(): Work not found (${uid}) : ${e}`));
       });
     });
   }
@@ -1128,12 +1086,12 @@ const createXWHEPClient = ({
         });
 
         if (jsonObject.xwhep.work === undefined) {
-          reject(`setPending(): Not a work : ${uid}`);
+          reject(new Error(`setPending(): Not a work : ${uid}`));
           return;
         }
 
         if (jsonObject.xwhep.work[0].status.toString() !== 'UNAVAILABLE') {
-          reject(`setPending(${uid}): Invalid status : ${jsonObject.xwhep.work[0].status}`);
+          reject(new Error(`setPending(${uid}): Invalid status : ${jsonObject.xwhep.work[0].status}`));
           return;
         }
 
@@ -1142,14 +1100,11 @@ const createXWHEPClient = ({
 
         sendWork(cookies, json2xml(jsonObject, false)).then(() => {
           resolve();
-          return;
         }).catch((err) => {
-          reject(`setPending() error : ${err}`);
-          return;
+          reject(new Error(`setPending() error : ${err}`));
         });
       }).catch((e) => {
-        reject(`setPending(): Work not found (${uid}) : ${e}`);
-        return;
+        reject(new Error(`setPending(): Work not found (${uid}) : ${e}`));
       });
     });
   }
@@ -1166,17 +1121,16 @@ const createXWHEPClient = ({
   const writeFile = (dataUid, fileContent) => (
     new Promise((resolve, reject) => {
       const wFile = `/tmp/${dataUid}`;
-	  fs.writeFile(wFile, fileContent, (err) => {
+      fs.writeFile(wFile, fileContent, (err) => {
         if (err) {
           fs.unlink(wFile);
-          reject(`writeFile() writeFile error : ${err}`);
+          reject(new Error(`writeFile() writeFile error : ${err}`));
           return;
-  	    }
-        resolve(wFile)
-  	    return;
-	  })
+        }
+        resolve(wFile);
+      });
     })
-  )
+  );
   /**
    * This registers a new data as stdin for the provided work
    * This is a private method not implemented in the smart contract
@@ -1186,102 +1140,91 @@ const createXWHEPClient = ({
    * @resolve undefined
    * @exception is thrown on error
    */
-  const setStdinUri= (cookies, workUid, stdinContent) => (
-	new Promise((resolve, reject) => {
-		debug(`setStdinUri(${cookies}, ${workUid}, ${stdinContent})`);
-      if ((stdinContent === "") || (stdinContent === undefined)) {
-    	  resolve();
-    	  return;
+  const setStdinUri = (cookies, workUid, stdinContent) => (
+    new Promise((resolve, reject) => {
+      debug(`setStdinUri(${cookies}, ${workUid}, ${stdinContent})`);
+      if ((stdinContent === '') || (stdinContent === undefined)) {
+        resolve();
+        return;
       }
 
       debug(`setStdinUri(${workUid})`);
       const dataUid = uuidV4();
       const dataDescription = `<data><uid>${dataUid}</uid><accessrights>0x755</accessrights><name>stdin.txt</name><status>UNAVAILABLE</status></data>`;
       sendData(cookies, dataDescription).then(() => {
-    	writeFile(dataUid, stdinContent.concat("                                                            ")).then((dataFile) =>{
-      	  uploadData(cookies, dataUid, dataFile).then(() => {
+        writeFile(dataUid, stdinContent.concat('                                                            ')).then((dataFile) => {
+          uploadData(cookies, dataUid, dataFile).then(() => {
             get(cookies, dataUid).then((getResponse) => {
               let jsonObject;
-        	  parseString(getResponse, (err, result) => {
-          		jsonObject = JSON.parse(JSON.stringify(result));
+              parseString(getResponse, (err, result) => {
+                jsonObject = JSON.parse(JSON.stringify(result));
               });
               if (jsonObject.xwhep.data === undefined) {
-                reject(`setStdinUri() : can't retrieve data: ${dataUid}`);
+                reject(new Error(`setStdinUri() : can't retrieve data: ${dataUid}`));
                 return;
               }
-              const stdinUri = jsonObject.xwhep.data[0]['uri'];
+              const stdinUri = jsonObject.xwhep.data[0].uri;
               debug(`setStdinUri(${workUid}) : ${stdinUri}`);
-          	  setWorkParam(cookies, workUid, 'stdinuri', stdinUri).then(() => {
-          	    debug(`setStdinUri(${workUid}) ${workUid}#stdinuri = ${stdinUri}`);
-       	        fs.unlink(dataFile);
-       	        resolve();
-       	        return;
-          	  }).catch((err) => {
+              setWorkParam(cookies, workUid, 'stdinuri', stdinUri).then(() => {
+                debug(`setStdinUri(${workUid}) ${workUid}#stdinuri = ${stdinUri}`);
                 fs.unlink(dataFile);
-          	    reject(`setStdinUri() setWorkParam error : ${err}`);
-          	    return;
-          	  });
-      	    }).catch((err) => {
-        	  fs.unlink(dataFile);
-        	  reject(`setStdinUri() get data error : ${err}`);
-        	  return;
+                resolve();
+              }).catch((err) => {
+                fs.unlink(dataFile);
+                reject(new Error(`setStdinUri() setWorkParam error : ${err}`));
+              });
+            }).catch((err) => {
+              fs.unlink(dataFile);
+              reject(new Error(`setStdinUri() get data error : ${err}`));
             });
-      	  }).catch((err) => {
-      		fs.unlink(dataFile);
-      		reject(`setStdinUri() uploadData error : ${err}`);
-      	    return;
+          }).catch((err) => {
+            fs.unlink(dataFile);
+            reject(new Error(`setStdinUri() uploadData error : ${err}`));
           });
         }).catch((err) => {
           debug(`setStdinUri() writeFile error : ${err}`);
-      	  reject(`setStdinUri() writeFile error : ${err}`);
-      	  return;
+          reject(new Error(`setStdinUri() writeFile error : ${err}`));
         });
       }).catch((err) => {
         debug(`setStdinUri sendData error : ${err}`);
-  		reject(`setStdinUri() sendData error : ${err}`);
-  	    return;
+        reject(new Error(`setStdinUri() sendData error : ${err}`));
       });
-	})
-  )
+    })
+  );
 
   /**
    * This registers a new PENDING work for the provided application.
    * Since the status is set to PENDING, this new work candidate for scheduling.
    * This is a public method implemented in the smart contract
    * @param appName is the application name
-   * @param cmdLineParam is the command line parameter. This may be ""
+   * @param cmdLineParam is the command line parameter. This may be '
    * @return a new Promise
    * @resolve the new work uid
    * @exception is thrown if application is not found
    */
-  const submit = (cookies, user, provider, creator,appName, cmdLineParam, stdinContent,submitTxHash) => (
-    new Promise((resolve, reject) => {
-      debug(`submit(${appName})`);
-      register(cookies, user, provider, creator,appName,submitTxHash).then((workUid) => {
-    	debug(`submit(${appName}) : ${workUid}`);
-        setWorkParam(cookies, workUid, 'cmdline', cmdLineParam).then(() => {
-          setStdinUri(cookies, workUid, stdinContent).then(() => {
-            setPending(cookies, workUid).then(() => {
-              resolve(workUid);
-              return;
+  const submit =
+    (cookies, user, provider, creator, appName, cmdLineParam, stdinContent, submitTxHash) =>
+      new Promise((resolve, reject) => {
+        debug(`submit(${appName})`);
+        register(cookies, user, provider, creator, appName, submitTxHash).then((workUid) => {
+          debug(`submit(${appName}) : ${workUid}`);
+          setWorkParam(cookies, workUid, 'cmdline', cmdLineParam).then(() => {
+            setStdinUri(cookies, workUid, stdinContent).then(() => {
+              setPending(cookies, workUid).then(() => {
+                resolve(workUid);
+              }).catch((msg) => {
+                reject(new Error('submit() setPending error : ', msg));
+              });
             }).catch((msg) => {
-              reject("submit() setPending error : ", msg);
-              return;
+              reject(new Error('submit() setStdinUri error : ', msg));
             });
           }).catch((msg) => {
-            reject("submit() setStdinUri error : ", msg);
-      	    return;
+            reject(new Error('submit() setWorkParam error : ', msg));
           });
         }).catch((msg) => {
-          reject("submit() setWorkParam error : ", msg);
-          return;
+          reject(new Error('submit() register error : ', msg));
         });
-      }).catch((msg) => {
-        reject("submit() register error : ", msg);
-  	    return;
       });
-    })
-  )
 
   /**
    * This downloads a data
@@ -1294,19 +1237,19 @@ const createXWHEPClient = ({
    * @exception is thrown if work result is not set
    */
   function download(cookies, uri, downloadedPath) {
-	return new Promise((resolve, reject) => {
-	  var state = "";
-	  if((cookies !== undefined) && (cookies[0] !== undefined)) {
-		var cookie = cookies[0];
-		state = getCookie(cookies, STATENAME);
-	  }
+    return new Promise((resolve, reject) => {
+      let state = '';
+      if ((cookies !== undefined) && (cookies[0] !== undefined)) {
+        let cookie = cookies[0];
+        state = getCookie(cookies, STATENAME);
+      }
 
-	  var creds = CREDENTIALS;
-	  if (state !== "") {
-		creds = `?${STATENAME}=${state}`;
-	  }
+      let creds = CREDENTIALS;
+      if (state !== '') {
+        creds = `?${STATENAME}=${state}`;
+      }
 
-	  const uid = uri.substring(uri.lastIndexOf('/') + 1);
+      const uid = uri.substring(uri.lastIndexOf('/') + 1);
 
       const downloadPath = `${PATH_DOWNLOADDATA}/${uid}`;
 
@@ -1320,26 +1263,22 @@ const createXWHEPClient = ({
 
       process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
-//      debug(`https://${options.hostname}:${options.port}${options.path}`);
+      //      debug(`https://${options.hostname}:${options.port}${options.path}`);
 
       const outputStream = fs.createWriteStream(downloadedPath);
       outputStream.on('error', (e) => {
-        reject(`download() : pipe error ${e}`);
-  	    return;
+        reject(new Error(`download() : pipe error ${e}`));
       }).on('data', (d) => {
-//        debug(d);
+        //        debug(d);
       }).on('finish', () => {
         resolve(downloadedPath);
-        return;
       });
 
       request.get(`https://${options.hostname}:${options.port}${options.path}`)
-        .on('response', () => {
-        })
+        .on('response', () => {})
         .on('error', (response) => {
           console.error(`download() : request error ${response}`);
-          reject(`download() : request error ${response}`);
-          return;
+          reject(new Error(`download() : request error ${response}`));
         })
         .pipe(outputStream);
     });
@@ -1357,26 +1296,22 @@ const createXWHEPClient = ({
     return new Promise((resolve, reject) => {
       process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
-//      debug(`${url}:${downloadedPath}`);
+      //      debug(`${url}:${downloadedPath}`);
 
       const outputStream = fs.createWriteStream(downloadedPath);
       outputStream.on('error', (e) => {
-        reject(`download() : pipe error ${e}`);
-  	    return;
-      }).on('data', (d) => {
-//        debug(d);
+        reject(new Error(`download() : pipe error ${e}`));
+      }).on('data', () => {
+        //        debug(d);
       }).on('finish', () => {
         resolve(downloadedPath);
-        return;
       });
 
       request.get(url)
-        .on('response', () => {
-        })
+        .on('response', () => {})
         .on('error', (response) => {
           console.error(`downloadURL() : request error ${response}`);
-          reject(`download() : request error ${response}`);
-    	    return;
+          reject(new Error(`download() : request error ${response}`));
         })
         .pipe(outputStream);
     });
@@ -1399,12 +1334,12 @@ const createXWHEPClient = ({
           jsonObject = JSON.parse(JSON.stringify(result));
         });
         if (jsonObject.xwhep.work === undefined) {
-          reject(`getResult(): Not a work : ${uid}`);
+          reject(new Error(`getResult(): Not a work : ${uid}`));
           return;
         }
 
         if (jsonObject.xwhep.work[0].status.toString() !== 'COMPLETED') {
-          reject(`getRestult(): Invalid status : ${jsonObject.xwhep.work[0].status}`);
+          reject(new Error(`getRestult(): Invalid status : ${jsonObject.xwhep.work[0].status}`));
           return;
         }
 
@@ -1417,8 +1352,7 @@ const createXWHEPClient = ({
 
         resolve(get(resultUid));
       }).catch((err) => {
-        reject(`getResult() error : ${err}`);
-  	    return;
+        reject(new Error(`getResult() error : ${err}`));
       });
     });
   }
@@ -1440,12 +1374,12 @@ const createXWHEPClient = ({
           jsonObject = JSON.parse(JSON.stringify(result));
         });
         if (jsonObject.xwhep.data === undefined) {
-          reject(`downloadResult(): Not a data : ${uid}`);
+          reject(new Error(`downloadResult(): Not a data : ${uid}`));
           return;
         }
 
         if (jsonObject.xwhep.data[0].status.toString() !== 'AVAILABLE') {
-          reject(`downloadResult(): Invalid status : ${jsonObject.xwhep.data[0].status}`);
+          reject(new Error(`downloadResult(): Invalid status : ${jsonObject.xwhep.data[0].status}`));
           return;
         }
 
@@ -1462,21 +1396,19 @@ const createXWHEPClient = ({
         }
         const dataUri = jsonObject.xwhep.data[0].uri;
         if (dataUri === undefined) {
-          reject(`downloadResult(): data uri not found : ${uid}`);
+          reject(new Error(`downloadResult(): data uri not found : ${uid}`));
           return;
         }
         debug(`downloadResult() calling download(${dataUri}, ${resultPath})`);
         download(cookies, dataUri.toString(), resultPath).then((downloadedPath) => {
           debug(`downloadResult() : ${downloadedPath}`);
           resolve(downloadedPath);
-          return;
         }).catch((msg) => {
           console.error(msg);
         });
       }).catch((msg) => {
         console.error(msg);
         reject(msg);
-        return;
       });
     });
   }
@@ -1500,11 +1432,9 @@ const createXWHEPClient = ({
         files.forEach((file) => {
           if (file.indexOf(uid) !== -1) {
             resolve(file);
-            return;
           }
         });
-        reject(`getResultPath() : file not found ${uid}`);
-  	    return;
+        reject(new Error(`getResultPath() : file not found ${uid}`));
       });
     });
   }
@@ -1519,19 +1449,19 @@ const createXWHEPClient = ({
   // eslint-disable-next-line
   function remove(cookies, uid) {
     return new Promise((resolve, reject) => {
-  	  var state = "";
-	  if((cookies !== undefined) && (cookies[0] !== undefined)) {
-		var cookie = cookies[0];
-		state = getCookie(cookies, STATENAME);
-	  }
+      let state = '';
+      if ((cookies !== undefined) && (cookies[0] !== undefined)) {
+        let cookie = cookies[0];
+        state = getCookie(cookies, STATENAME);
+      }
 
 
-	  var creds = CREDENTIALS;
-	  if (state !== "") {
-		creds = `?${STATENAME}=${state}`;
-	  }
+      let creds = CREDENTIALS;
+      if (state !== '') {
+        creds = `?${STATENAME}=${state}`;
+      }
 
-	  let getResponse = '';
+      let getResponse = '';
 
       const getPath = `${PATH_REMOVE}/${uid}`;
       const options = {
@@ -1541,7 +1471,7 @@ const createXWHEPClient = ({
         method: 'GET',
         rejectUnauthorized: false,
       };
-//      debug(`${options.hostname}:${options.port}${getPath}`);
+      //      debug(`${options.hostname}:${options.port}${getPath}`);
 
       const req = https.request(options, (res) => {
         res.on('data', (d) => {
@@ -1550,15 +1480,13 @@ const createXWHEPClient = ({
         });
 
         res.on('end', () => {
-//          debug(getResponse);
+          //          debug(getResponse);
           resolve();
-          return;
         });
       });
 
       req.on('error', (e) => {
         reject(e);
-  	    return;
       });
       req.end();
     });
@@ -1581,22 +1509,21 @@ const createXWHEPClient = ({
 
           if (newStatus.toString() === 'ERROR') {
             clearInterval(theInterval);
-            reject(`waitCompleted() : work ERROR (${uid})`);
+            reject(new Error(`waitCompleted() : work ERROR (${uid})`));
             return;
           }
           if (newStatus.toString() === 'COMPLETED') {
-            debug("waitCompleted !");
+            debug('waitCompleted !');
             clearInterval(theInterval);
-            debug("waitCompleted. interval clear !");
+            debug('waitCompleted. interval clear !');
             resolve();
-            debug("waitCompleted. reseolved!");
+            debug('waitCompleted. reseolved!');
             return;
           }
           debug(`waitCompleted sleeping ${WAITSTATUSDELAY}ms : ${uid} (${newStatus})`);
         }).catch((e) => {
           clearInterval(theInterval);
-          reject(`waitCompleted() : ${e}`);
-          return;
+          reject(new Error(`waitCompleted() : ${e}`));
         });
       }, WAITSTATUSDELAY);
     });
@@ -1606,16 +1533,16 @@ const createXWHEPClient = ({
    * This submits a work for the provided application and waits for its completion
    * This is a public method implemented in the smart contract
    * @param appName is the application name
-   * @param cmdLineParam is the command line parameter. This may be ""
+   * @param cmdLineParam is the command line parameter. This may be '
    * @return a new Promise
    * @resolve the workuid and result path
    * @exception is thrown on submission error
    * @exception is thrown if work status is ERROR
    */
-  function submitAndWait(cookies, user, provider, creator, appName, cmdLineParam,stdinContent,submitTxHash) {
+  function submitAndWait(cookies, user, provider, creator, appName, cmdLineParam, stdinContent, submitTxHash) {
     return new Promise((resolve, reject) => {
       let workuid;
-      submit(cookies, user, provider, creator, appName, cmdLineParam,stdinContent,submitTxHash).then((uid) => {
+      submit(cookies, user, provider, creator, appName, cmdLineParam, stdinContent, submitTxHash).then((uid) => {
         workuid = uid;
         debug('submitAndWait() submission done');
         waitCompleted(cookies, uid).then(() => {
@@ -1624,94 +1551,84 @@ const createXWHEPClient = ({
             debug(`submitAndWait() downloaded ${workuid}`);
             getResultPath(cookies, workuid).then((resultPath) => {
               debug(`submitAndWait() path ${resultPath}`);
-              resolve([workuid,resultPath]);
-              return;
+              resolve([workuid, resultPath]);
             }).catch((msg) => {
-              reject(`submitAndWait() 1 : ${msg}`);
-              return;
+              reject(new Error(`submitAndWait() 1 : ${msg}`));
             });
           }).catch((msg) => {
-            reject(`submitAndWait() 2 : ${msg}`);
-      	    return;
+            reject(new Error(`submitAndWait() 2 : ${msg}`));
           });
         }).catch((e) => {
-          reject(`submitAndWait() 3 : ${e}`);
-          return;
+          reject(new Error(`submitAndWait() 3 : ${e}`));
         });
       }).catch((e) => {
-        reject(`submitAndWait() 4 : ${e}`);
-  	    return;
+        reject(new Error(`submitAndWait() 4 : ${e}`));
       });
     });
   }
 
 
   /**
-   * This submits a work for the provided application and waits for its completion and then return stdout
+   * This submits a work for the provided application
+   * and waits for its completion and then return stdout
    * This is a public method implemented in the smart contract
    * @param appName is the application name
-   * @param cmdLineParam is the command line parameter. This may be ""
+   * @param cmdLineParam is the command line parameter. This may be '
    * @return a new Promise
    * @resolve the workuid and result path
    * @exception is thrown on submission error
    * @exception is thrown if work status is ERROR
    */
-  function submitAndWaitAndGetStdout(cookies, user, provider, creator, appName, cmdLineParam,stdinContent,submitTxHash) {
+  function submitAndWaitAndGetStdout(cookies, user, provider, creator, appName, cmdLineParam, stdinContent, submitTxHash) {
     return new Promise((resolve, reject) => {
       let workuid;
       let resultPath;
-      submitAndWait(cookies, user, provider, creator, appName, cmdLineParam,stdinContent,submitTxHash).then((results) => {
-        [workuid, resultPath] = results;
-        debug('submitAndWaitAndGetResult() submitAndWait done');
-        debug(`submitAndWaitAndGetResult() path ${resultPath}`);
-        stdoutPath(resultPath,submitTxHash).then((stdoutPath) => {
+      submitAndWait(cookies, user, provider, creator, appName, cmdLineParam, stdinContent, submitTxHash)
+        .then((results) => {
+          [workuid, resultPath] = results;
+          debug('submitAndWaitAndGetResult() submitAndWait done');
+          debug(`submitAndWaitAndGetResult() path ${resultPath}`);
+          stdoutPath(resultPath, submitTxHash).then((stdoutPath) => {
             dumpFile(stdoutPath).then((textContent) => {
-              resolve([workuid,textContent]);
-              return;
+              resolve([workuid, textContent]);
             }).catch((msg) => {
-              reject(`submitAndWaitAndGetResult() dumpFile call : ${msg}`);
-              return;
+              reject(new Error(`submitAndWaitAndGetResult() dumpFile call : ${msg}`));
             });
+          }).catch((e) => {
+            reject(new Error(`submitAndWaitAndGetResult() stdoutPath call : ${e}`));
+          });
         }).catch((e) => {
-            reject(`submitAndWaitAndGetResult() stdoutPath call : ${e}`);
-            return;
+          reject(new Error(`submitAndWaitAndGetResult() submitAndWait call : ${e}`));
         });
-      }).catch((e) => {
-        reject(`submitAndWaitAndGetResult() submitAndWait call : ${e}`);
-  	    return;
-      });
     });
   }
 
 
-    /**
-     * This unzip the result file if needed
-     * This is a private method not implemented in the smart contract
-     * @param path is the text file path
-     * @return a new Promise
-     * @resolve a String containing the stdout path
-     */
-    function stdoutPath(resultPath,submitTxHash) {
-        return new Promise((resolve, reject) => {
-              if (!resultPath.endsWith(".zip")) {
-              resolve(resultPath);
-              return;
-             }
-             else{
-              fs.createReadStream(resultPath)
-                  .pipe(unzip.Extract({ path: submitTxHash+'-result' }))
-                  .on('close', function () {
-                      resolve(submitTxHash+'-result/stdout.txt');
-                      return;
-                  })
-                  .on('error', function(err) {
-                      reject(`stdoutPath() : unizp failed ${err}`);
-                      return;
-                  });
-            }
-      });
-    }
-
+  /**
+   * This unzip the result file if needed
+   * This is a private method not implemented in the smart contract
+   * @param path is the text file path
+   * @return a new Promise
+   * @resolve a String containing the stdout path
+   */
+  function stdoutPath(resultPath, submitTxHash) {
+    return new Promise((resolve, reject) => {
+      if (!resultPath.endsWith('.zip')) {
+        resolve(resultPath);
+      } else {
+        fs.createReadStream(resultPath)
+          .pipe(unzip.Extract({
+            path: submitTxHash.concat('-result'),
+          }))
+          .on('close', () => {
+            resolve(submitTxHash.concat('-result/stdout.txt'));
+          })
+          .on('error', (err) => {
+            reject(new Error(`stdoutPath() : unizp failed ${err}`));
+          });
+      }
+    });
+  }
 
 
   /**
@@ -1728,7 +1645,6 @@ const createXWHEPClient = ({
 
       readableStream.on('error', (err) => {
         reject(err);
-  	    return;
       });
       readableStream.on('data', (chunk) => {
         data += chunk;
@@ -1736,20 +1652,19 @@ const createXWHEPClient = ({
 
       readableStream.on('end', () => {
         resolve(data);
-        return;
       });
     });
   }
 
-/**
- * This the content of the work stdout file
- * This is a public method implemented in the smart contract
- * @param uid is the work uid
- * @return a new Promise
- * @resolve a String containing the text file content
- * @exception is thrown if work is not found
- * @exception is thrown if stdout file is not found
- */
+  /**
+   * This the content of the work stdout file
+   * This is a public method implemented in the smart contract
+   * @param uid is the work uid
+   * @return a new Promise
+   * @resolve a String containing the text file content
+   * @exception is thrown if work is not found
+   * @exception is thrown if stdout file is not found
+   */
   function getStdout(cookies, uid) {
     return new Promise((resolve, reject) => {
       downloadResult(cookies, uid).then(() => {
@@ -1758,33 +1673,31 @@ const createXWHEPClient = ({
           debug(`getStdout() path ${resultPath}`);
           dumpFile(resultPath).then((textContent) => {
             resolve(textContent);
-      	    return;
           }).catch((msg) => {
-        	reject(`getStdout() : ${msg}`);
-      	    return;
-          })
+            reject(new Error(`getStdout() : ${msg}`));
+          });
         }).catch((msg) => {
-          reject(`getStdout() : ${msg}`);
-          return;
+          reject(new Error(`getStdout() : ${msg}`));
         });
       }).catch((msg) => {
-    	reject(`getStdout() : ${msg}`);
-    	return;
-      })
+        reject(new Error(`getStdout() : ${msg}`));
+      });
     });
   }
 
-/**
- * This authenticates to xwhep service
- * @param jwttoken is a signed encoded Json Web Token that must contain 2 fields:
- * -1- iss : the issuer
- * -2- blockchainaddr : the hash of the user public key
- * @return a new Promise
- * @resolve a cookies table to be used to access the server
- */
+  /**
+   * This authenticates to xwhep service
+   * @param jwttoken is a signed encoded Json Web Token that must contain 2 fields:
+   * -1- iss : the issuer
+   * -2- blockchainaddr : the hash of the user public key
+   * @return a new Promise
+   * @resolve a cookies table to be used to access the server
+   */
   function auth(jwtoken) {
     return new Promise((resolve, reject) => {
-      const keepAliveAgent = new http.Agent({ keepAlive: true });
+      const keepAliveAgent = new http.Agent({
+        keepAlive: true
+      });
       const options = {
         hostname,
         port,
@@ -1793,40 +1706,33 @@ const createXWHEPClient = ({
         rejectUnauthorized: false,
         headers: {
           Cookie: `${ETHAUTHNAME}=${jwtoken}`,
-            'content-type': 'text/plain',
-            'connection': 'keep-alive',
-            'accept': '*/*'
+          'content-type': 'text/plain',
+          connection: 'keep-alive',
+          accept: '*/*',
         },
       };
 
-     debug('auth() options', options);
+      debug('auth() options', options);
       const req = https.request(options, (res) => {
-//    	debug('statusCode:', res.statusCode);
-//        debug('response.headers :', res.headers);
-//    	debug('response.headers.location :', res.headers.location);
-    	var location = URL.parse(res.headers.location);
-//        debug(`location.path : ${location}`);
-//        debug(`location.search: ${location.search}`);
+        let location = URL.parse(res.headers.location);
+        //        debug(`location.path : ${location}`);
+        //        debug(`location.search: ${location.search}`);
         const state = location.search.substring(1);
-//        debug(`state: ${state}`);
+        //        debug(`state: ${state}`);
 
-//    	debug('response.headers.set-cookie :', res.headers['set-cookie']);
-        res.on('data', (d) => {});
+        res.on('data', () => {});
 
         res.on('end', () => {
           resolve(res.headers['set-cookie']);
-//          resolve(state);
-          return;
         });
       });
 
       req.on('error', (e) => {
-        debug('error', e)
+        debug('error', e);
         reject(e);
-        return;
       });
       req.end();
-    })
+    });
   }
 
   return {

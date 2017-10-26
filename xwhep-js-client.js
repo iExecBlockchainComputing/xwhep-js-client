@@ -10,6 +10,7 @@ const json2xml = require('json2xml');
 const FormData = require('form-data');
 const md5File = require('md5-file');
 const unzip = require('unzip');
+const fetch = require('node-fetch');
 
 const debug = Debug('xwhep-js-client');
 /*
@@ -494,14 +495,19 @@ const createXWHEPClient = ({
       dataForm.append('DATAMD5SUM', dataMD5);
       dataForm.append('DATASIZE', dataSize);
       dataForm.append('DATAFILE', fileData);
-      dataForm.submit(options, (err, result) => {
-        if (err) {
-          reject(new Error('uploadData error '.concat(err)));
-          return;
-        }
-        debug('dataForm.submit result', result.statusCode);
-        resolve(result);
-      });
+
+      process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
+      const path = 'https://'.concat(hostname, `${PATH_UPLOADDATA}/${dataUid}${creds}`);
+      debug('path', path);
+      fetch(path, { method: 'POST', body: dataForm })
+        .then((res) => {
+          debug('uploadData() res.statusCode', res.statusCode);
+          return res.text();
+        }).then((txt) => {
+          debug('uploadData()', txt);
+          resolve(txt);
+          process.env.NODE_TLS_REJECT_UNAUTHORIZED = 1;
+        }).catch((e) => { debug('uploadData()', e); reject(e); });
     });
   }
 

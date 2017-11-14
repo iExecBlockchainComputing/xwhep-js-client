@@ -748,7 +748,7 @@ const createXWHEPClient = ({
    * @see knownCPUs
    * @see knownOSes
    */
-  function registerApp(cookies, user, provider, creator, appName, _os, _cpu, binaryUrl) {
+  function registerApp(cookies, user, provider, creator, appName, _os, _cpu, binaryUrl, _type) {
     return new Promise((resolve, reject) => {
       if ((_os === undefined) || (_cpu === undefined) || (binaryUrl === undefined)) {
         reject(new Error('registerApp() : OS or CPU undefined'));
@@ -757,6 +757,7 @@ const createXWHEPClient = ({
 
       const os = _os.toUpperCase();
       const cpu = _cpu.toUpperCase();
+      const type = _type.toUpperCase();
 
       if (!(cpu in knownCPUs)) {
         reject(new Error(`registerApp() : unknown CPU '${cpu}'`));
@@ -773,7 +774,7 @@ const createXWHEPClient = ({
 
       const appDescription = `<app><uid>${appUid}</uid><name>${appName}</name><type>DEPLOYABLE</type><accessrights>0x755</accessrights></app>`;
       sendApp(cookies, provider, appDescription).then(() => {
-        setApplicationBinary(cookies, appUid, os, cpu, binaryUrl).then(() => {
+        setApplicationBinary(cookies, appUid, os, cpu, binaryUrl, type).then(() => {
           resolve(appUid);
         }).catch((err) => {
           reject(new Error(`registerApp() setApplicationBinary error : ${err}`));
@@ -792,15 +793,16 @@ const createXWHEPClient = ({
    * @resolve undefined
    * @exception is thrown on error
    */
-  function setApplicationBinary(cookies, appUid, _os, _cpu, binaryUrl) {
+  function setApplicationBinary(cookies, appUid, _os, _cpu, binaryUrl, _type) {
     return new Promise((resolve, reject) => {
       if ((_os === undefined) || (_cpu === undefined) || (binaryUrl === undefined)) {
-        reject(new Error(`setApplicationBinary() : OS or CPU undefined`));
+        reject(new Error('setApplicationBinary() : OS or CPU undefined'));
         return;
       }
 
       const os = _os.toUpperCase();
       const cpu = _cpu.toUpperCase();
+      const type = _type.toUpperCase();
 
       if (!(cpu in knownCPUs)) {
         reject(new Error(`setApplicationBinary() : unknown CPU '${cpu}'`));
@@ -814,19 +816,16 @@ const createXWHEPClient = ({
       let binaryURI;
       binaryURI = URL.parse(binaryUrl);
 
-      debug(`setApplicationBinary(${appUid}, ${os}, ${cpu}, ${binaryURI})`);
+      debug(`setApplicationBinary(${appUid}, ${os}, ${cpu}, ${binaryURI}, ${_type})`);
       debug('setApplicationBinary() binaryURI.protocol', binaryURI.protocol);
 
       const dataFile = binaryURI.pathname;
       const stats = fs.statSync(dataFile);
       const dataSize = stats.size;
       debug('setApplicationBinary() app size:', dataSize);
-      // if(dataSize < 55) {
-      // reject(`setApplicationBinary() : binaryfile.size < 55 ???`);
-      // return;
-      // }
+
       const dataUid = uuidV4();
-      const dataDescription = `<data><uid>${dataUid}</uid><accessrights>0x755</accessrights><type>BINARY</type><name>fileName</name><cpu>${cpu}</cpu><os>${os}</os><status>UNAVAILABLE</status></data>`;
+      const dataDescription = `<data><uid>${dataUid}</uid><accessrights>0x755</accessrights><type>${type}</type><name>fileName</name><cpu>${cpu}</cpu><os>${os}</os><status>UNAVAILABLE</status></data>`;
       sendData(cookies, dataDescription).then(() => {
         uploadData(cookies, dataUid, dataFile).then(() => {
           get(cookies, dataUid).then((getResponse) => {

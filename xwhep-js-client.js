@@ -1540,15 +1540,12 @@ const createXWHEPClient = ({
    * @exception is thrown on submission error
    * @exception is thrown if work status is ERROR
    */
-  function submitAndWait(
-    cookies, user, provider, creator,
-    appName, cmdLineParam, stdinContent, submitTxHash,
-  ) {
+  function submitAndWait(cookies, user, provider, creator, appName, cmdLineParam, stdinContent, submitTxHash) {
     return new Promise((resolve, reject) => {
       let workuid;
       submit(
         cookies, user, provider, creator, appName,
-        cmdLineParam, stdinContent, submitTxHash,
+        cmdLineParam, stdinContent, submitTxHash
       ).then((uid) => {
         workuid = uid;
         debug('submitAndWait() submission done');
@@ -1638,14 +1635,14 @@ const createXWHEPClient = ({
    */
   function submitAndWaitAndGetStdout(
     cookies, user, provider, creator,
-    appName, cmdLineParam, stdinContent, submitTxHash,
+    appName, cmdLineParam, stdinContent, submitTxHash
   ) {
     return new Promise((resolve, reject) => {
       let workuid;
       let resultPath;
       submitAndWait(
         cookies, user, provider, creator, appName,
-        cmdLineParam, stdinContent, submitTxHash,
+        cmdLineParam, stdinContent, submitTxHash
       )
         .then((results) => {
           [workuid, resultPath] = results;

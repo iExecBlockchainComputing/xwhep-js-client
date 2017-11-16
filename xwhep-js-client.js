@@ -360,8 +360,8 @@ const createXWHEPClient = ({
   /**
    * This sends the application to server
    * This is a private method not implemented in the smart contract
-   * @param cookies contains the JWT; this is not used if provider is set
-   * @provider provider is the identity of the application provider;
+   * @param cookies contains the JWT; this is not used if dapp is set
+   * @dapp dapp is the identity of the application dapp;
    *           this cancels cookies usage;
    *           this must be used in conjunction with the mandataire defined
    *           by login and password attributes (ligne 326)
@@ -371,7 +371,7 @@ const createXWHEPClient = ({
    * @see login
    * @see password
    */
-  function sendApp(cookies, provider, xmlApp) {
+  function sendApp(cookies, dapp, xmlApp) {
     return new Promise((resolve, reject) => {
       let state = '';
 
@@ -862,10 +862,10 @@ const createXWHEPClient = ({
    * This is a public method implemented in the smart contract
    * It is the caller responsibility to ensure appName does not already exist
    * @param appName is the application name;
-   *        application name is set as 'appName_creator' and this is unic
-   *        If one given creator calls this method twice or more,
+   *        application name is set as 'appName_provider' and this is unic
+   *        If one given provider calls this method twice or more,
    *        this does not insert a new application, but updates application
-   *        which name is 'appName_creator'
+   *        which name is 'appName_provider'
    * @param os  is the binary operating system; must be in knownOSes
    * @param cpu is the binary CPU type; must be in knownCPUs
    * @param binaryUrl is the URI where to find the binary;
@@ -876,7 +876,7 @@ const createXWHEPClient = ({
    * @see knownCPUs
    * @see knownOSes
    */
-  function registerApp(cookies, user, provider, creator, appName, _os, _cpu, binaryUrl, _type) {
+  function registerApp(cookies, user, dapp, provider, appName, _os, _cpu, binaryUrl, _type) {
     return new Promise((resolve, reject) => {
       if ((_os === undefined) || (_cpu === undefined) || (binaryUrl === undefined)) {
         reject(new Error('registerApp() : OS or CPU undefined'));
@@ -901,7 +901,7 @@ const createXWHEPClient = ({
       debug(`registerApp (${appName}, ${os}, ${cpu}, ${binaryUrl})`);
 
       const appDescription = `<app><uid>${appUid}</uid><name>${appName}</name><type>DEPLOYABLE</type><accessrights>0x755</accessrights></app>`;
-      sendApp(cookies, provider, appDescription).then(() => {
+      sendApp(cookies, dapp, appDescription).then(() => {
         setApplicationBinary(cookies, appUid, os, cpu, binaryUrl, type).then(() => {
           resolve(appUid);
         }).catch((err) => {
@@ -925,7 +925,7 @@ const createXWHEPClient = ({
    * @exception is thrown if application is not found
    * @see #setPending(uid)
    */
-  function register(cookies, user, provider, creator, appName, submitTxHash) {
+  function register(cookies, user, dapp, provider, appName, submitTxHash) {
     return new Promise((resolve, reject) => {
       if (!(appName in hashtableAppNames)) {
         getApps().then(() => {
@@ -1208,10 +1208,10 @@ const createXWHEPClient = ({
    * @exception is thrown if application is not found
    */
   const submit =
-    (cookies, user, provider, creator, appName, cmdLineParam, stdinContent, submitTxHash) =>
+    (cookies, user, dapp, provider, appName, cmdLineParam, stdinContent, submitTxHash) =>
       new Promise((resolve, reject) => {
         debug(`submit(${appName})`);
-        register(cookies, user, provider, creator, appName, submitTxHash).then((workUid) => {
+        register(cookies, user, dapp, provider, appName, submitTxHash).then((workUid) => {
           debug(`submit(${appName}) : ${workUid}`);
           setWorkParam(cookies, workUid, 'cmdline', cmdLineParam).then(() => {
             setStdinUri(cookies, workUid, stdinContent).then(() => {
@@ -1540,11 +1540,11 @@ const createXWHEPClient = ({
    * @exception is thrown on submission error
    * @exception is thrown if work status is ERROR
    */
-  function submitAndWait(cookies, user, provider, creator, appName, cmdLineParam, stdinContent, submitTxHash) {
+  function submitAndWait(cookies, user, dapp, provider, appName, cmdLineParam, stdinContent, submitTxHash) {
     return new Promise((resolve, reject) => {
       let workuid;
       submit(
-        cookies, user, provider, creator, appName,
+        cookies, user, dapp, provider, appName,
         cmdLineParam, stdinContent, submitTxHash
       ).then((uid) => {
         workuid = uid;
@@ -1634,14 +1634,14 @@ const createXWHEPClient = ({
    * @exception is thrown if work status is ERROR
    */
   function submitAndWaitAndGetStdout(
-    cookies, user, provider, creator,
+    cookies, user, dapp, provider,
     appName, cmdLineParam, stdinContent, submitTxHash
   ) {
     return new Promise((resolve, reject) => {
       let workuid;
       let resultPath;
       submitAndWait(
-        cookies, user, provider, creator, appName,
+        cookies, user, dapp, provider, appName,
         cmdLineParam, stdinContent, submitTxHash
       )
         .then((results) => {

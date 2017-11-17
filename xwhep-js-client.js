@@ -11,6 +11,7 @@ const md5File = require('md5-file');
 const fetch = require('node-fetch');
 const devnull = require('dev-null');
 const through2 = require('through2');
+const qs = require('qs');
 
 const debug = Debug('xwhep-js-client');
 /*
@@ -334,16 +335,18 @@ const createXWHEPClient = ({
       if (state !== '') {
         creds = `?${STATENAME}=${state}`;
       }
+      const xmldesc = qs.stringify({ XMLDESC: xmlWork });
       const options = {
         hostname,
         port,
-        path: `${PATH_SENDWORK + creds}&XMLDESC=${encodeURIComponent(xmlWork)}`,
+        path: `${PATH_SENDWORK + creds}&${xmldesc}`,
         method: 'GET',
         rejectUnauthorized: false,
       };
       debug('sendWork()', options);
 
       const req = https.request(options, (res) => {
+        res.on('data', () => {});
         res.on('end', () => {
           resolve();
         });
@@ -923,15 +926,15 @@ const createXWHEPClient = ({
           return reject(new Error(`register() : application not found ${appName}`));
         }
         debug('appName %o in hashtableAppNames', appName, appName in hashtableAppNames);
-        const workUid = uuidV4();
+        const workUID = uuidV4();
 
-        const appUid = hashtableAppNames[appName];
+        const appUID = hashtableAppNames[appName];
 
-        const workDescription = `<work><uid>${workUid}</uid><accessrights>0x755</accessrights><appuid>${appUid}</appuid><sgid>${submitTxHash}</sgid><status>UNAVAILABLE</status></work>`;
+        const workDescription = `<work><uid>${workUID}</uid><accessrights>0x755</accessrights><appuid>${appUID}</appuid><sgid>${submitTxHash}</sgid><status>UNAVAILABLE</status></work>`;
         return sendWork(cookies, workDescription).then(() => {
           // a 2nd time to force status to UNAVAILABLE
           sendWork(cookies, workDescription).then(() => {
-            resolve(workUid);
+            resolve(workUID);
           }).catch((err) => {
             reject(new Error(`register() sendWork 2 error : ${err}`));
           });

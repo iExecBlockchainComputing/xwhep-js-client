@@ -337,20 +337,17 @@ const createXWHEPClient = ({
       const options = {
         hostname,
         port,
-        path: `${PATH_SENDWORK + creds}&XMLDESC=${xmlWork}`,
+        path: `${PATH_SENDWORK + creds}&XMLDESC=${encodeURIComponent(xmlWork)}`,
         method: 'GET',
         rejectUnauthorized: false,
       };
       debug('sendWork()', options);
 
       const req = https.request(options, (res) => {
-        res.on('data', () => {});
-
         res.on('end', () => {
           resolve();
         });
       });
-
       req.on('error', (e) => {
         reject(e);
       });
@@ -972,7 +969,8 @@ const createXWHEPClient = ({
       get(cookies, uid).then((getResponse) => {
         let jsonObject;
         parseString(getResponse, (err, result) => {
-          jsonObject = JSON.parse(JSON.stringify(result));
+          if (err) reject(err);
+          jsonObject = result;
         });
 
         if (jsonObject.xwhep.work === undefined) {
@@ -1194,7 +1192,14 @@ const createXWHEPClient = ({
         const paramsKeys = Object.keys(params).filter(e => e in workAvailableParameters);
         debug('paramsKeys', paramsKeys);
         debug('params', params);
-        Promise.all(paramsKeys.map(e => setWorkParam(cookies, workUID, e, params[e])))
+        const paramsFuncs = paramsKeys.map(e => () => setWorkParam(cookies, workUID, e, params[e]));
+        paramsFuncs.reduce(
+          (promise, func) => {
+            debug('reduce', promise, func);
+            return promise.then(result => func().then(Array.prototype.concat.bind(result)));
+          },
+          Promise.resolve([])
+        )
           .then(() => {
             setPending(cookies, workUID).then(() => {
               resolve(workUID);

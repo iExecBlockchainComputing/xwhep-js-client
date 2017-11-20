@@ -1081,7 +1081,7 @@ const createXWHEPClient = ({
         }
 
         jsonObject.xwhep.work[0].status = 'PENDING';
-        debug(`setPending(${uid}) send : ${JSON.stringify(jsonObject)}`);
+        debug(`setPending(${uid})`, jsonObject);
 
         sendWork(cookies, json2xml(jsonObject, false)).then(() => {
           resolve();
@@ -1241,51 +1241,55 @@ const createXWHEPClient = ({
       }
 
       const uid = uri.substring(uri.lastIndexOf('/') + 1);
-
-      const getPath = `${PATH_DOWNLOADDATA}/${uid}`;
-
-      const options = {
-        hostname,
-        port,
-        path: getPath + creds,
-        method: 'GET',
-        rejectUnauthorized: false,
-      };
-      debug('get', options);
-
-      process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-
-      let buff = Buffer.from('', 'utf8');
-      let full = false;
-      const bufferSize = 1 * 1024;
-      const outputStream = savePath ? fs.createWriteStream(savePath) : devnull();
-      request.get(`https://${options.hostname}:${options.port}${options.path}`)
-        .on('response', () => {})
-        .on('error', (response) => {
-          debug(`download() : request error ${response}`);
-          reject(new Error(`download() : request error ${response}`));
-        })
-        .pipe(through2((chunk, enc, cb) => {
-          debug('chunk', chunk);
-          debug('buff', buff);
-          if (!full) {
-            debug('type of chunk', typeof chunk);
-            debug(`Buffering chunk of size ${chunk.length}`);
-            buff = Buffer.concat([buff, chunk]);
-            if (buff.length >= bufferSize) {
-              debug('Buffer limit reached', buff.length);
-              full = true;
-            }
-          }
-          cb(null, chunk);
-        }))
-        .pipe(outputStream)
-        .on('finish', () => {
-          debug('finish event');
-          debug('buff.length', buff.length);
-          debug('buff.slice(0, bufferSize).length', buff.slice(0, bufferSize).length);
-          resolve({ stdout: buff.slice(0, bufferSize).toString(), savePath, uri });
+      get(cookies, uid).then((data) => {
+        let jsonData;
+        parseString(data, (err, result) => {
+          if (err) reject(err);
+          jsonData = result;
         });
+        debug('jsonData', jsonData);
+        const fileName = savePath.concat('.', jsonData.xwhep.data[0].type[0].toLowerCase());
+        const getPath = `${PATH_DOWNLOADDATA}/${uid}`;
+
+        const options = {
+          hostname,
+          port,
+          path: getPath + creds,
+          method: 'GET',
+          rejectUnauthorized: false,
+        };
+        debug('get', options);
+
+        process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
+        let buff = Buffer.from('', 'utf8');
+        let full = false;
+        const bufferSize = 1 * 1024;
+        const outputStream = savePath ? fs.createWriteStream(fileName) : devnull();
+        request.get(`https://${options.hostname}:${options.port}${options.path}`)
+          .on('response', () => {})
+          .on('error', (response) => {
+            debug(`download() : request error ${response}`);
+            reject(new Error(`download() : request error ${response}`));
+          })
+          .pipe(through2((chunk, enc, cb) => {
+            if (!full) {
+              buff = Buffer.concat([buff, chunk]);
+              if (buff.length >= bufferSize) {
+                debug('Buffer limit reached', buff.length);
+                full = true;
+              }
+            }
+            cb(null, chunk);
+          }))
+          .pipe(outputStream)
+          .on('finish', () => {
+            debug('finish event');
+            debug('buff.length', buff.length);
+            debug('buff.slice(0, bufferSize).length', buff.slice(0, bufferSize).length);
+            resolve({ stdout: buff.slice(0, bufferSize).toString(), savePath: fileName, uri });
+          });
+      }).catch(e => debug('getData', e));
     });
   }
 

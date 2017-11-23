@@ -12,7 +12,6 @@ const fetch = require('node-fetch');
 const devnull = require('dev-null');
 const through2 = require('through2');
 const qs = require('qs');
-const btoa = require('btoa')
 
 const debug = Debug('xwhep-js-client');
 /*
@@ -301,7 +300,7 @@ const createXWHEPClient = ({
   hostname = '',
   port = '',
 }) => {
-  const BASICAUTH_CREDENTIALS = btoa(unescape(encodeURIComponent(login + ':' + password)));  
+  const BASICAUTH_CREDENTIALS = Buffer.from(login.concat(':', password)).toString('base64');
   // const MANDATVARIABLENAME = 'MANDATINGLOGIN';
 
 
@@ -328,8 +327,8 @@ const createXWHEPClient = ({
     return new Promise((resolve, reject) => {
       let state = '';
       if ((cookies !== undefined) && (cookies[0] !== undefined)) {
-        state =`${STATENAME}=` + getCookie(cookies, STATENAME);
-      }      
+        state = STATENAME.concat('=', getCookie(cookies, STATENAME));
+      }
       const xmldesc = qs.stringify({ XMLDESC: xmlWork });
       const options = {
         hostname,
@@ -337,7 +336,7 @@ const createXWHEPClient = ({
         path: `${PATH_SENDWORK}?${state}&${xmldesc}`,
         method: 'GET',
         rejectUnauthorized: false,
-        headers: { Authorization: 'Basic ' + BASICAUTH_CREDENTIALS },
+        headers: { Authorization: 'Basic '.concat(BASICAUTH_CREDENTIALS) },
       };
       debug('sendWork()', options);
 
@@ -372,8 +371,8 @@ const createXWHEPClient = ({
     return new Promise((resolve, reject) => {
       let state = '';
       if ((cookies !== undefined) && (cookies[0] !== undefined)) {
-        state =`${STATENAME}=` + getCookie(cookies, STATENAME);
-      }      
+        state = STATENAME.concat('=', getCookie(cookies, STATENAME));
+      }
       const options = {
         hostname,
         port,
@@ -381,7 +380,7 @@ const createXWHEPClient = ({
         method: 'GET',
         protocol: 'https:',
         rejectUnauthorized: false,
-        headers: { Authorization: 'Basic ' + BASICAUTH_CREDENTIALS },
+        headers: { Authorization: 'Basic '.concat(BASICAUTH_CREDENTIALS) },
       };
       debug('sendApp()', options);
 
@@ -413,8 +412,8 @@ const createXWHEPClient = ({
     return new Promise((resolve, reject) => {
       let state = '';
       if ((cookies !== undefined) && (cookies[0] !== undefined)) {
-        state =`${STATENAME}=` + getCookie(cookies, STATENAME);
-      }      
+        state = STATENAME.concat('=', getCookie(cookies, STATENAME));
+      }
       const stats = fs.statSync(dataPath);
       const dataSize = stats.size;
 
@@ -435,21 +434,20 @@ const createXWHEPClient = ({
       process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
       const path = 'https://'.concat(hostname, `${PATH_UPLOADDATA}/${dataUid}?${state}`);
       debug('path', path);
-      const options = { 
-        method: 'POST', 
-        headers: { Authorization: 'Basic ' + BASICAUTH_CREDENTIALS }, 
-        body: dataForm 
+      const options = {
+        method: 'POST',
+        headers: { Authorization: 'Basic '.concat(BASICAUTH_CREDENTIALS) },
+        body: dataForm,
       };
       fetch(path, options).then((res) => {
-          debug('uploadData() res.statusCode', res.statusCode);
-          return res.text();
-        }).then((txt) => {
-          debug('uploadData()', txt);
-          resolve(txt);
-          process.env.NODE_TLS_REJECT_UNAUTHORIZED = 1;
-        }).catch((e) => { debug('uploadData()', e); reject(e); });
+        debug('uploadData() res.statusCode', res.statusCode);
+        return res.text();
+      }).then((txt) => {
+        debug('uploadData()', txt);
+        resolve(txt);
+        process.env.NODE_TLS_REJECT_UNAUTHORIZED = 1;
+      }).catch((e) => { debug('uploadData()', e); reject(e); });
     });
-
   }
 
   /**
@@ -463,8 +461,8 @@ const createXWHEPClient = ({
     return new Promise((resolve, reject) => {
       let state = '';
       if ((cookies !== undefined) && (cookies[0] !== undefined)) {
-        state =`${STATENAME}=` + getCookie(cookies, STATENAME);
-      }      
+        state = STATENAME.concat('=', getCookie(cookies, STATENAME));
+      }
       const options = {
         hostname,
         port,
@@ -472,7 +470,7 @@ const createXWHEPClient = ({
         method: 'GET',
         protocol: 'https:',
         rejectUnauthorized: false,
-        headers: { Authorization: 'Basic ' + BASICAUTH_CREDENTIALS },
+        headers: { Authorization: 'Basic '.concat(BASICAUTH_CREDENTIALS) },
       };
 
       debug('sendData()', options);
@@ -505,8 +503,8 @@ const createXWHEPClient = ({
 
       let state = '';
       if ((cookies !== undefined) && (cookies[0] !== undefined)) {
-        state =`${STATENAME}=` + getCookie(cookies, STATENAME);
-      }     
+        state = STATENAME.concat('=', getCookie(cookies, STATENAME));
+      }
       const options = {
         hostname,
         port,
@@ -514,7 +512,7 @@ const createXWHEPClient = ({
         method: 'GET',
         protocol: 'https:',
         rejectUnauthorized: false,
-        headers: { Authorization: 'Basic ' + BASICAUTH_CREDENTIALS },
+        headers: { Authorization: 'Basic '.concat(BASICAUTH_CREDENTIALS) },
       };
       debug('get', options);
 
@@ -542,7 +540,7 @@ const createXWHEPClient = ({
       let getResponse = '';
       let state = '';
       if ((cookies !== undefined) && (cookies[0] !== undefined)) {
-        state =`${STATENAME}=` + getCookie(cookies, STATENAME);
+        state = STATENAME.concat('=', getCookie(cookies, STATENAME));
       }
       const options = {
         hostname,
@@ -551,7 +549,7 @@ const createXWHEPClient = ({
         protocol: 'https:',
         method: 'GET',
         rejectUnauthorized: false,
-        headers: { Authorization: 'Basic ' + BASICAUTH_CREDENTIALS },
+        headers: { Authorization: 'Basic '.concat(BASICAUTH_CREDENTIALS) },
       };
 
       debug('get', options);
@@ -630,8 +628,8 @@ const createXWHEPClient = ({
     return new Promise((resolve, reject) => {
       let state = '';
       if ((cookies !== undefined) && (cookies[0] !== undefined)) {
-        state =`${STATENAME}=` + getCookie(cookies, STATENAME);
-      }      
+        state = STATENAME.concat('=', getCookie(cookies, STATENAME));
+      }
       const options = {
         hostname,
         port,
@@ -639,7 +637,7 @@ const createXWHEPClient = ({
         method: 'GET',
         protocol: 'https:',
         rejectUnauthorized: false,
-        headers: { Authorization: 'Basic ' + BASICAUTH_CREDENTIALS },
+        headers: { Authorization: 'Basic '.concat(BASICAUTH_CREDENTIALS) },
       };
       let getAppsResponse = '';
       debug('getApps() options', options);
@@ -1199,7 +1197,7 @@ const createXWHEPClient = ({
       get(cookies, uid).then((data) => {
         let state = '';
         if ((cookies !== undefined) && (cookies[0] !== undefined)) {
-          state =`${STATENAME}=` + getCookie(cookies, STATENAME);
+          state = STATENAME.concat('=', getCookie(cookies, STATENAME));
         }
         let jsonData;
         parseString(data, (err, result) => {
@@ -1210,8 +1208,8 @@ const createXWHEPClient = ({
         const fileName = savePath.concat('.', jsonData.xwhep.data[0].type[0].toLowerCase());
         const options = {
           method: 'GET',
-          uri: 'https://'+ hostname +':'+ port + PATH_DOWNLOADDATA + '/' + uid + '?' + state,
-          headers: { Authorization: 'Basic ' + BASICAUTH_CREDENTIALS },
+          uri: 'https://'.concat(hostname, ':', port, PATH_DOWNLOADDATA, '/', uid, '?', state),
+          headers: { Authorization: 'Basic '.concat(BASICAUTH_CREDENTIALS) },
         };
         debug('get', options);
         console.log(options);
@@ -1389,8 +1387,8 @@ const createXWHEPClient = ({
     return new Promise((resolve, reject) => {
       let state = '';
       if ((cookies !== undefined) && (cookies[0] !== undefined)) {
-        state =`${STATENAME}=` + getCookie(cookies, STATENAME);
-      }      
+        state = STATENAME.concat('=', getCookie(cookies, STATENAME));
+      }
       const options = {
         hostname,
         port,
@@ -1398,7 +1396,7 @@ const createXWHEPClient = ({
         method: 'GET',
         protocol: 'https:',
         rejectUnauthorized: false,
-        headers: { Authorization: 'Basic ' + BASICAUTH_CREDENTIALS },
+        headers: { Authorization: 'Basic '.concat(BASICAUTH_CREDENTIALS) },
       };
 
       let getResponse = '';

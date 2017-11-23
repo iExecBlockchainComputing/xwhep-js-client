@@ -1467,7 +1467,10 @@ const createXWHEPClient = ({
    * @exception is thrown if work status is ERROR
    */
   function submitAndWait(cookies, user, dapp, provider, appName, params, submitTxHash) {
-    return submit(cookies, user, dapp, provider, appName, params, submitTxHash)
+    return submit(
+      cookies, user, dapp.toLowerCase(), provider.toLowerCase(),
+      appName.toLowerCase(), params, submitTxHash
+    )
       .then(workuid => waitCompleted(cookies, workuid))
       .then(workuid => downloadResult(cookies, workuid));
   }

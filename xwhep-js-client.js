@@ -660,8 +660,8 @@ const createXWHEPClient = ({
             debug('appuids', appuids);
             const appUidPromises = appuids.map(x =>
               new Promise((reso, rej) =>
-                getApp(cookies, x).then(() => {
-                  reso();
+                getApp(cookies, x).then((xmlApp) => {
+                  reso(xmlApp);
                 }).catch((e) => {
                   rej(new Error(`getApp(${x}) ${e}`));
                 })));

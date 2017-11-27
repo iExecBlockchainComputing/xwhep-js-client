@@ -637,7 +637,7 @@ const createXWHEPClient = ({
         method: 'GET',
         protocol: 'https:',
         rejectUnauthorized: false,
-        headers: { accept: '*/*', Authorization: 'Basic '.concat(BASICAUTH_CREDENTIALS) },
+        headers: { accept: '*/*'},
       };
       let getAppsResponse = '';
       debug('getApps() options', options);
@@ -682,13 +682,14 @@ const createXWHEPClient = ({
             });
           });
         });
+      req.on('error', (e) => {
+          debug('getApps req onError', e);
+      reject(new Error(`getApps() : ${e}`));
+  });
+      req.end();
       });
 
-      req.on('error', (e) => {
-        debug('getApps req onError', e);
-        reject(new Error(`getApps() : ${e}`));
-      });
-      req.end();
+
     });
   }
 

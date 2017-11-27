@@ -636,11 +636,11 @@ const createXWHEPClient = ({
         path: `${PATH_GETAPPS}?XWLOGIN=admin&XWPASSWD=adminiexec&${state}`,
         method: 'GET',
         protocol: 'https:',
-        rejectUnauthorized: false,
+        rejectUnauthorized: true,
         headers: { accept: '*/*'},
       };
       let getAppsResponse = '';
-      debug('getApps() options', options);
+      debug('getApps() options debug francois', options);
       const req = https.request(options, (res) => {
           debug('getApps() wait res');
           debug(res);
@@ -682,14 +682,13 @@ const createXWHEPClient = ({
             });
           });
         });
-      req.on('error', (e) => {
-          debug('getApps req onError', e);
-      reject(new Error(`getApps() : ${e}`));
-  });
-      req.end();
       });
 
-
+      req.on('error', (e) => {
+        debug('getApps req onError', e);
+        reject(new Error(`getApps() : ${e}`));
+      });
+      req.end();
     });
   }
 

@@ -633,11 +633,11 @@ const createXWHEPClient = ({
       const options = {
         hostname,
         port,
-        path: `${PATH_GETAPPS}?${state}`,
+        path: `${PATH_GETAPPS}?XWLOGIN=admin&XWPASSWD=adminiexec&${state}`,
         method: 'GET',
         protocol: 'https:',
         rejectUnauthorized: false,
-        headers: { Authorization: 'Basic '.concat(BASICAUTH_CREDENTIALS) },
+        headers: { accept: '*/*', Authorization: 'Basic '.concat(BASICAUTH_CREDENTIALS) },
       };
       let getAppsResponse = '';
       debug('getApps() options', options);

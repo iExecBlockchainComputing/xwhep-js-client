@@ -624,6 +624,49 @@ const createXWHEPClient = ({
    * @see getApp(appUid)
    * @see auth(jwtoken)
    */
+
+
+
+
+    function getApps(cookies) {
+        return new Promise((resolve, reject) => {
+
+        let getAppsResponse = '';
+        debug('getApps() options debug francois request', options);
+
+      request(
+          { method: 'GET'
+              , uri: 'https://xwdev.iex.ec:443/getapps?XWLOGIN=admin&XWPASSWD=adminiexec'
+          }
+          , function (error, response, body) {
+
+              debug('error');
+              debug(error);
+              debug('response');
+              debug(response);
+              debug('body');
+              debug(body);
+          }
+      )
+          .on('data', function(data) {
+              // decompressed data as it is received
+              debug('decoded chunk: ' + data)
+          })
+          .on('response', function(response) {
+              // unmodified http.IncomingMessage object
+              response.on('data', function(data) {
+                  // compressed data as it is received
+                  debug('received ' + data.length + ' bytes of compressed data')
+              })
+          });
+
+        reject(new Error(`getApps() `));
+    });
+    }
+
+
+
+/*
   function getApps(cookies) {
     return new Promise((resolve, reject) => {
       let state = '';
@@ -637,7 +680,7 @@ const createXWHEPClient = ({
         method: 'GET',
         protocol: 'https:',
         rejectUnauthorized: true,
-        headers: { accept: '*/*'},
+
       };
       let getAppsResponse = '';
       debug('getApps() options debug francois', options);
@@ -691,7 +734,7 @@ const createXWHEPClient = ({
       req.end();
     });
   }
-
+*/
   /**
    * This sets a parameter for the provided application
    * This is a public method implemented in the smart contract

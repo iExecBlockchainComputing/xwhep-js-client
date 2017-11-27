@@ -643,12 +643,19 @@ const createXWHEPClient = ({
       debug('getApps() options', options);
       const req = https.request(options, (res) => {
         res.on('data', (d) => {
-          debug('onData', d);
+          debug('getApps onData', d);
           const strd = String.fromCharCode.apply(null, new Uint16Array(d));
           getAppsResponse += strd;
         });
         res.on('end', () => {
+            debug('getApps onend');
           parseString(getAppsResponse, (err, jsonData) => {
+              debug('parseString done');
+              debug('getAppsResponse');
+      debug(getAppsResponse);
+              debug('err');
+              debug(err);
+
             if (err) return reject(err);
 
             const appsCount = jsonData.xwhep.XMLVector[0].XMLVALUE.length;

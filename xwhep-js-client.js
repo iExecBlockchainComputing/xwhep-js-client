@@ -642,6 +642,8 @@ const createXWHEPClient = ({
       let getAppsResponse = '';
       debug('getApps() options', options);
       const req = https.request(options, (res) => {
+          debug('getApps() wait res');
+          debug(res);
         res.on('data', (d) => {
           debug('getApps onData', d);
           const strd = String.fromCharCode.apply(null, new Uint16Array(d));

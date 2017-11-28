@@ -649,6 +649,9 @@ const createXWHEPClient = ({
         debug('getAppsResponse', getAppsResponse);
     });
         res.on('end', () => {
+            debug('end req.data', req.data);
+            debug('end getAppsResponse', getAppsResponse);
+
             parseString(getAppsResponse, (err, jsonData) => {
             debug('err', err);
             debug('jsonData', jsonData);

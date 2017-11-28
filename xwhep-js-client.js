@@ -644,10 +644,14 @@ const createXWHEPClient = ({
             res.on('data', (d) => {
             debug('onData', d);
         const strd = String.fromCharCode.apply(null, new Uint16Array(d));
+        debug('strd', strd);
         getAppsResponse += strd;
+        debug('getAppsResponse', getAppsResponse);
     });
         res.on('end', () => {
             parseString(getAppsResponse, (err, jsonData) => {
+            debug('err', err);
+            debug('jsonData', jsonData);
             if (err) return reject(err);
 
             const appsCount = jsonData.xwhep.XMLVector[0].XMLVALUE.length;

@@ -1,6 +1,6 @@
 {
   "name": "xwhep-js-client",
-  "version": "1.0.20",
+  "version": "1.0.21",
   "description": "JS client to interact with XWHEP REST API",
   "main": "xwhep-js-client.js",
   "scripts": {

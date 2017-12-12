@@ -323,7 +323,7 @@ const createXWHEPClient = ({
    * @return a new Promise
    * @resolve undefined
    */
-  function sendWork(cookies, xmlWork) {
+  function sendWork(cookies, xmlWork, user) {
     return new Promise((resolve, reject) => {
       let state = '';
       if ((cookies !== undefined) && (cookies[0] !== undefined)) {
@@ -333,7 +333,7 @@ const createXWHEPClient = ({
       const options = {
         hostname,
         port,
-        path: `${PATH_SENDWORK}?${state}&${xmldesc}`,
+        path: `${PATH_SENDWORK}?${state}&${xmldesc}&XWMANDATINGLOGIN=${user}`,
         method: 'GET',
         rejectUnauthorized: false,
         headers: { Authorization: 'Basic '.concat(BASICAUTH_CREDENTIALS) },
@@ -778,7 +778,7 @@ const createXWHEPClient = ({
       debug('setApplicationBinary() app size:', dataSize);
 
       const dataUid = uuidV4();
-      const dataDescription = `<data><uid>${dataUid}</uid><accessrights>0x755</accessrights><type>${type}</type><name>fileName</name><cpu>${cpu}</cpu><os>${os}</os><status>UNAVAILABLE</status></data>`;
+      const dataDescription = `<data><uid>${dataUid}</uid><accessrights>0x1700</accessrights><type>${type}</type><name>fileName</name><cpu>${cpu}</cpu><os>${os}</os><status>UNAVAILABLE</status></data>`;
       sendData(cookies, dataDescription).then(() => {
         uploadData(cookies, dataUid, dataFile).then(() => {
           get(cookies, dataUid).then((getResponse) => {
@@ -856,7 +856,7 @@ const createXWHEPClient = ({
       const appUid = uuidV4();
       debug(`registerApp (${appName}, ${os}, ${cpu}, ${binaryUrl})`);
 
-      const appDescription = `<app><uid>${appUid}</uid><name>${appName}</name><type>DEPLOYABLE</type><accessrights>0x755</accessrights></app>`;
+      const appDescription = `<app><uid>${appUid}</uid><name>${appName}</name><type>DEPLOYABLE</type><accessrights>0x1700</accessrights></app>`;
       sendApp(cookies, dapp, appDescription).then(() => {
         setApplicationBinary(cookies, appUid, os, cpu, binaryUrl, type).then(() => {
           resolve(appUid);
@@ -893,10 +893,10 @@ const createXWHEPClient = ({
 
         const appUID = hashtableAppNames[appName];
 
-        const workDescription = `<work><uid>${workUID}</uid><accessrights>0x755</accessrights><appuid>${appUID}</appuid><sgid>${submitTxHash}</sgid><status>UNAVAILABLE</status></work>`;
-        return sendWork(cookies, workDescription).then(() => {
+        const workDescription = `<work><uid>${workUID}</uid><accessrights>0x1700</accessrights><appuid>${appUID}</appuid><sgid>${submitTxHash}</sgid><status>UNAVAILABLE</status></work>`;
+        return sendWork(cookies, workDescription, user).then(() => {
           // a 2nd time to force status to UNAVAILABLE
-          sendWork(cookies, workDescription).then(() => {
+          sendWork(cookies, workDescription, user).then(() => {
             resolve(workUID);
           }).catch((err) => {
             reject(new Error(`register() sendWork 2 error : ${err}`));
@@ -922,7 +922,7 @@ const createXWHEPClient = ({
    * @exception is thrown if parameter is read only (e.g. status, return code, etc.)
    */
 
-  function setWorkParam(cookies, uid, paramName, paramValue) {
+  function setWorkParam(cookies, uid, paramName, paramValue, user) {
     if (!(paramName in workAvailableParameters)) {
       return Promise.reject(new Error(`setWorkParam() : Invalid parameter ${paramName}`));
     }
@@ -951,7 +951,7 @@ const createXWHEPClient = ({
 
         jsonObject.xwhep.work[0][paramName] = paramValue;
         debug('setWorkParam(', uid, ',', paramName, ',', paramValue, ')');
-        sendWork(cookies, json2xml(jsonObject, false)).then(() => {
+        sendWork(cookies, json2xml(jsonObject, false), user).then(() => {
           resolve();
         }).catch((err) => {
           reject(new Error(`setWorkParam() sendWork error : ${err}`));
@@ -1025,7 +1025,7 @@ const createXWHEPClient = ({
    * @exception is thrown if paramName does not represent a valid work parameter
    * @exception is thrown if parameter is read only (e.g. status, return code, etc.)
    */
-  function setPending(cookies, uid) {
+  function setPending(cookies, uid, user) {
     return new Promise((resolve, reject) => {
       get(cookies, uid).then((getResponse) => {
         let jsonObject;
@@ -1046,7 +1046,7 @@ const createXWHEPClient = ({
         jsonObject.xwhep.work[0].status = 'PENDING';
         debug(`setPending(${uid})`, jsonObject);
 
-        sendWork(cookies, json2xml(jsonObject, false)).then(() => {
+        sendWork(cookies, json2xml(jsonObject, false), user).then(() => {
           resolve();
         }).catch((err) => {
           reject(new Error(`setPending() error : ${err}`));
@@ -1056,89 +1056,6 @@ const createXWHEPClient = ({
       });
     });
   }
-
-  /**
-   * This writes a new file
-   * This is a private method not implemented in the smart contract
-   * @param dataUid is the data identifier
-   * @param fileContent is written into new file
-   * @return a new Promise
-   * @resolve file name
-   * @exception is thrown on error
-   */
-  const writeFile = (dataUid, fileContent) => (
-    new Promise((resolve, reject) => {
-      const wFile = `/tmp/${dataUid}`;
-      fs.writeFile(wFile, fileContent, (err) => {
-        if (err) {
-          fs.unlink(wFile);
-          reject(new Error(`writeFile() writeFile error : ${err}`));
-          return;
-        }
-        resolve(wFile);
-      });
-    })
-  );
-  /**
-   * This registers a new data as stdin for the provided work
-   * This is a private method not implemented in the smart contract
-   * @param workUid is the work identifier
-   * @param stdinContent is a string containing the stdin
-   * @return a new Promise
-   * @resolve undefined
-   * @exception is thrown on error
-   */
-  const setStdinUri = (cookies, workUid, stdinContent) => (
-    new Promise((resolve, reject) => {
-      debug(`setStdinUri(${cookies}, ${workUid}, ${stdinContent})`);
-      if ((stdinContent === '') || (stdinContent === undefined)) {
-        resolve();
-        return;
-      }
-
-      debug(`setStdinUri(${workUid})`);
-      const dataUid = uuidV4();
-      const dataDescription = `<data><uid>${dataUid}</uid><accessrights>0x755</accessrights><name>stdin.txt</name><status>UNAVAILABLE</status></data>`;
-      sendData(cookies, dataDescription).then(() => {
-        writeFile(dataUid, stdinContent.concat('                                                            ')).then((dataFile) => {
-          uploadData(cookies, dataUid, dataFile).then(() => {
-            get(cookies, dataUid).then((getResponse) => {
-              let jsonObject;
-              parseString(getResponse, (err, result) => {
-                jsonObject = JSON.parse(JSON.stringify(result));
-              });
-              if (jsonObject.xwhep.data === undefined) {
-                reject(new Error(`setStdinUri() : can't retrieve data: ${dataUid}`));
-                return;
-              }
-              const stdinUri = jsonObject.xwhep.data[0].uri;
-              debug(`setStdinUri(${workUid}) : ${stdinUri}`);
-              setWorkParam(cookies, workUid, 'stdinuri', stdinUri).then(() => {
-                debug(`setStdinUri(${workUid}) ${workUid}#stdinuri = ${stdinUri}`);
-                fs.unlink(dataFile);
-                resolve();
-              }).catch((err) => {
-                fs.unlink(dataFile);
-                reject(new Error(`setStdinUri() setWorkParam error : ${err}`));
-              });
-            }).catch((err) => {
-              fs.unlink(dataFile);
-              reject(new Error(`setStdinUri() get data error : ${err}`));
-            });
-          }).catch((err) => {
-            fs.unlink(dataFile);
-            reject(new Error(`setStdinUri() uploadData error : ${err}`));
-          });
-        }).catch((err) => {
-          debug(`setStdinUri() writeFile error : ${err}`);
-          reject(new Error(`setStdinUri() writeFile error : ${err}`));
-        });
-      }).catch((err) => {
-        debug(`setStdinUri sendData error : ${err}`);
-        reject(new Error(`setStdinUri() sendData error : ${err}`));
-      });
-    })
-  );
 
   /**
    * This registers a new PENDING work for the provided application.
@@ -1158,7 +1075,8 @@ const createXWHEPClient = ({
         const paramsKeys = Object.keys(params).filter(e => e in workAvailableParameters);
         debug('paramsKeys', paramsKeys);
         debug('params', params);
-        const paramsFuncs = paramsKeys.map(e => () => setWorkParam(cookies, workUID, e, params[e]));
+        const paramsFuncs = paramsKeys.map(e =>
+          () => setWorkParam(cookies, workUID, e, params[e], user));
         paramsFuncs.reduce(
           (promise, func) => {
             debug('reduce', promise, func);
@@ -1167,7 +1085,7 @@ const createXWHEPClient = ({
           Promise.resolve([])
         )
           .then(() => {
-            setPending(cookies, workUID).then(() => {
+            setPending(cookies, workUID, user).then(() => {
               resolve(workUID);
             }).catch((msg) => {
               reject(new Error('submit() setPending error : ', msg));
